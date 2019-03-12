@@ -1,0 +1,19 @@
+version: '3'
+services: 
+ bigchaindb:
+  image: bigchaindb/bigchaindb:all-in-one
+  ports:
+   - "9984:9984"
+   - "9985:9985"
+   - "27017:27017"
+   - "26657:26657"
+  volumes:
+   - "$HOME/bigchaindb_docker/mongodb/data/db:/data/db"
+   - "$HOME/bigchaindb_docker/mongodb/data/configdb:/data/configdb"
+   - "$HOME/bigchaindb_docker/tendermint:/tendermint"
+ cryptimage:
+  image: vinayakakv/cryptimage
+  ports:
+   - "8080:8080"
+  volumes:
+   - "../project-final:/home/cryptoman/app"
