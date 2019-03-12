@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous">
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css' rel='stylesheet'/>
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.js'></script>
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.css'
+          type='text/css'/>
+    <style>
+    </style>
+    <title>Survey</title>
+</head>
+
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">CryptoLand | Survey</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="home.html">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="#">Survey <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="../about.html">About</a>
+            </li>
+        </ul>
+        <span class="navbar-text mr-3">
+                Logged in as : $1
+            </span>
+        <div class="form-inline my-2 my-lg-0">
+            <button class="btn btn-outline-danger my-2 my-sm-0" id="logout" type="submit">Logout</button>
+        </div>
+    </div>
+</nav>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-9 col-sm-12">
+            <div id='map' style="top:5vh;height:80vh;"></div>
+        </div>
+        <div class="col-md-3 col-sm-12 mt-4 border-left border-dark">
+            <div class="container-fluid">
+                <div class="form-group">
+                    <label for="surveyNumber" class="col-form-label">Survey Number</label>
+                    <div class="col-sm-12">
+                        <input type="text" id="surveyNumber" class="form-control" placeholder="Survey Number">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="landType" class="col-form-label">Land Type</label>
+                    <div class="col-sm-12">
+                        <select id="landType" class="form-control">
+                            <option>Agriculture</option>
+                            <option>Wet</option>
+                            <option>Waste</option>
+                            <option>Residential</option>
+                            <option>Commercial</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="boundaries">Boundaries</label>
+                    <div class="col-sm-12">
+                        <textarea id="boundaries" class="form-control" style="resize: none;" rows="3" cols="5"
+                                  readonly></textarea>
+                    </div>
+                </div>
+                <div class="col-sm-12 d-flex justify-content-center">
+                    <button type="submit" class="btn btn-outline-success" id="saveBtn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script
+        src="http://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1Ijoic2FnYXJrcyIsImEiOiJjanI2bXQxa20wMmR0NDJtczd6ZzAxaG05In0.hKpKurChhDYW0eo4R48wjw';
+    /* eslint-disable */
+    var map = new mapboxgl.Map({
+        container: 'map', // container id
+        style: 'mapbox://styles/mapbox/satellite-v9', //hosted style id
+        center: [-91.874, 42.760], // starting position
+        zoom: 12 // starting zoom
+    });
+
+    var draw = new MapboxDraw({
+        displayControlsDefault: false,
+        controls: {
+            polygon: true,
+            trash: true
+        }
+    });
+    map.addControl(draw);
+    survey_ids = [];
+    surveys = {};
+    map.on('load', () => {
+        console.log("load called");
+        $.ajax({
+            type: "POST",
+            url: '/getSurveys',
+            success: (data) => {
+                data.forEach((x) => {
+                    survey_ids.push(x.boundaries.id);
+                    surveys[x.boundaries.id] = x;
+                    draw.add(x.boundaries);
+                })
+            },
+            contentType: "application/json",
+            dataType: "json"
+        })
+    });
+
+    map.on('draw.create', (e) => {
+        let json = JSON.stringify(e.features[0]);
+        $("#boundaries").text(json)
+    });
+    map.on('draw.delete', (e) => {
+        e.features.forEach(feature => {
+            if (survey_ids.includes(feature.id)) {
+                console.log("Can not delete existing survey");
+                draw.add(feature);
+                console.log("Added");
+            }
+        })
+    });
+    map.on('draw.update', (e) => {
+        console.log(e);
+        if (survey_ids.includes(e.features[0].id)) {
+            console.log("I was moved forcibly!");
+            draw.delete(e.features[0].id);
+            draw.add(surveys[e.features[0].id].boundaries)
+        }
+    });
+    map.on('draw.selectionchange', (e) => {
+        console.log("fired selection change");
+        if (e.features.length === 0)
+            return;
+        let inputs = [$('#surveyNumber'), $('#landType'), $('#boundaries')];
+        let saveBtn = $("#saveBtn");
+        if (survey_ids.includes(e.features[0].id)) {
+            let current = surveys[e.features[0].id];
+            let values = [current.surveyNumber, current.landType, JSON.stringify(current.boundaries)];
+            inputs.forEach((x, i) => {
+                x.prop('disabled', true);
+                x.val(values[i]);
+            });
+            saveBtn.prop('disabled', true);
+        } else {
+            inputs.forEach((x) => {
+                x.prop('disabled', false);
+                if (x.attr("id") !== "boundaries")
+                    x.val("");
+            });
+            saveBtn.prop('disabled', false);
+        }
+    });
+    $("#saveBtn").click(saveSurvey);
+
+    function saveSurvey() {
+        $.ajax({
+            type: "POST",
+            url: '/saveSurvey',
+            data: JSON.stringify({
+                surveyNumber: $('#surveyNumber').val(),
+                landType: $('#landType').val(),
+                boundaries: $('#boundaries').val()
+            }),
+            success: (response) => {
+                console.log(response);
+                if (response.success) {
+                    let x = response.data;
+                    survey_ids.push(x.boundaries.id);
+                    surveys[x.boundaries.id] = x;
+                }
+            },
+            contentType: "application/json",
+            dataType: "json"
+        })
+    }
+</script>
+</body>
+
+</html>
