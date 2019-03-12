@@ -52,6 +52,26 @@
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
 
 <div class="container-fluid">
+    <!-- Modal -->
+    <div class="modal fade" id="warningModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Warning</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <span>Message goes here</span>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="col-md-9 col-sm-12">
             <div id='map' style="top:5vh;height:80vh;"></div>
@@ -105,30 +125,38 @@
 
     mapboxgl.accessToken = 'pk.eyJ1Ijoic2FnYXJrcyIsImEiOiJjanI2bXQxa20wMmR0NDJtczd6ZzAxaG05In0.hKpKurChhDYW0eo4R48wjw';
     /* eslint-disable */
-    var map = new mapboxgl.Map({
+    let map = new mapboxgl.Map({
         container: 'map', // container id
         style: 'mapbox://styles/mapbox/satellite-v9', //hosted style id
         center: [-91.874, 42.760], // starting position
         zoom: 12 // starting zoom
     });
 
-    var draw = new MapboxDraw({
+    let draw = new MapboxDraw({
         displayControlsDefault: false,
         controls: {
             polygon: true,
             trash: true
         }
     });
+
     map.addControl(draw);
     let surveys = {};
+
+    let showModal = (title, message) => {
+        let modal = $('#warningModal');
+        modal.find('.modal-body').text(title);
+        modal.find('.modal-body').html(message);
+        modal.modal();
+
+    };
+
     map.on('load', () => {
-        console.log("load called");
         $.ajax({
             type: "POST",
             url: '/getSurveys',
             success: (data) => {
                 data.forEach((x) => {
-                    console.log(x);
                     surveys[x.boundaries.id] = x;
                     draw.add(x.boundaries);
                 })
@@ -142,25 +170,27 @@
         let json = JSON.stringify(e.features[0]);
         $("#boundaries").text(json)
     });
+
     map.on('draw.delete', (e) => {
         e.features.forEach(feature => {
             if (Object.keys(surveys).includes(feature.id)) {
-                console.log("Can not delete existing survey");
+                showModal("Warning", "Can not delete existing survey");
                 draw.add(feature);
-                console.log("Added");
             }
         })
     });
+
     map.on('draw.update', (e) => {
         console.log(e);
         if (e.features.length === 0)
             return;
         if (Object.keys(surveys).includes(e.features[0].id)) {
-            console.log("I was moved forcibly!");
+            showModal("Warning", "Could not move existing survey");
             draw.delete(e.features[0].id);
             draw.add(surveys[e.features[0].id].boundaries)
         }
     });
+
     map.on('draw.selectionchange', (e) => {
         if (e.features.length === 0)
             return;
@@ -185,9 +215,8 @@
             saveBtn.prop('disabled', false);
         }
     });
-    $("#saveBtn").click(saveSurvey);
 
-    function saveSurvey() {
+    $("#saveBtn").click(() => {
         $.ajax({
             type: "POST",
             url: '/saveSurvey',
@@ -200,14 +229,20 @@
                 console.log(response);
                 if (response.success) {
                     let x = response.data;
-                    console.log(x);
                     surveys[x.boundaries.id] = x;
+                    showModal("Success","Survey successfully added");
                 }
+                else
+                    showModal("Failure", response.message);
+            },
+            error : () =>{
+              showModal("Failure", "Critical error");
             },
             contentType: "application/json",
             dataType: "json"
         })
-    }
+    });
+
 </script>
 </body>
 
