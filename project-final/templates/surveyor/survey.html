@@ -102,6 +102,7 @@
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
 <script>
+
     mapboxgl.accessToken = 'pk.eyJ1Ijoic2FnYXJrcyIsImEiOiJjanI2bXQxa20wMmR0NDJtczd6ZzAxaG05In0.hKpKurChhDYW0eo4R48wjw';
     /* eslint-disable */
     var map = new mapboxgl.Map({
@@ -119,8 +120,7 @@
         }
     });
     map.addControl(draw);
-    survey_ids = [];
-    surveys = {};
+    let surveys = {};
     map.on('load', () => {
         console.log("load called");
         $.ajax({
@@ -128,7 +128,7 @@
             url: '/getSurveys',
             success: (data) => {
                 data.forEach((x) => {
-                    survey_ids.push(x.boundaries.id);
+                    console.log(x);
                     surveys[x.boundaries.id] = x;
                     draw.add(x.boundaries);
                 })
@@ -144,7 +144,7 @@
     });
     map.on('draw.delete', (e) => {
         e.features.forEach(feature => {
-            if (survey_ids.includes(feature.id)) {
+            if (Object.keys(surveys).includes(feature.id)) {
                 console.log("Can not delete existing survey");
                 draw.add(feature);
                 console.log("Added");
@@ -153,19 +153,20 @@
     });
     map.on('draw.update', (e) => {
         console.log(e);
-        if (survey_ids.includes(e.features[0].id)) {
+        if (e.features.length === 0)
+            return;
+        if (Object.keys(surveys).includes(e.features[0].id)) {
             console.log("I was moved forcibly!");
             draw.delete(e.features[0].id);
             draw.add(surveys[e.features[0].id].boundaries)
         }
     });
     map.on('draw.selectionchange', (e) => {
-        console.log("fired selection change");
         if (e.features.length === 0)
             return;
         let inputs = [$('#surveyNumber'), $('#landType'), $('#boundaries')];
         let saveBtn = $("#saveBtn");
-        if (survey_ids.includes(e.features[0].id)) {
+        if (Object.keys(surveys).includes(e.features[0].id)) {
             let current = surveys[e.features[0].id];
             let values = [current.surveyNumber, current.landType, JSON.stringify(current.boundaries)];
             inputs.forEach((x, i) => {
@@ -178,6 +179,8 @@
                 x.prop('disabled', false);
                 if (x.attr("id") !== "boundaries")
                     x.val("");
+                else
+                    x.val(JSON.stringify(e.features[0]))
             });
             saveBtn.prop('disabled', false);
         }
@@ -197,7 +200,7 @@
                 console.log(response);
                 if (response.success) {
                     let x = response.data;
-                    survey_ids.push(x.boundaries.id);
+                    console.log(x);
                     surveys[x.boundaries.id] = x;
                 }
             },
