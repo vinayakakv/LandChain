@@ -168,7 +168,7 @@
 
     map.on('draw.create', (e) => {
         let json = JSON.stringify(e.features[0]);
-        $("#boundaries").text(json)
+        $("#boundaries").val(json)
     });
 
     map.on('draw.delete', (e) => {
@@ -181,13 +181,16 @@
     });
 
     map.on('draw.update', (e) => {
-        console.log(e);
         if (e.features.length === 0)
             return;
         if (Object.keys(surveys).includes(e.features[0].id)) {
             showModal("Warning", "Could not move existing survey");
             draw.delete(e.features[0].id);
             draw.add(surveys[e.features[0].id].boundaries)
+        } else {
+            console.log(e);
+            let json = JSON.stringify(e.features[0]);
+            $("#boundaries").val(json);
         }
     });
 
@@ -230,13 +233,12 @@
                 if (response.success) {
                     let x = response.data;
                     surveys[x.boundaries.id] = x;
-                    showModal("Success","Survey successfully added");
-                }
-                else
+                    showModal("Success", "Survey successfully added");
+                } else
                     showModal("Failure", response.message);
             },
-            error : () =>{
-              showModal("Failure", "Critical error");
+            error: () => {
+                showModal("Failure", "Critical error");
             },
             contentType: "application/json",
             dataType: "json"
