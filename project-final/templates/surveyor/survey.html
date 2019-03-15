@@ -78,35 +78,47 @@
         </div>
         <div class="col-md-3 col-sm-12 mt-4 border-left border-dark">
             <div class="container-fluid">
-                <div class="form-group">
-                    <label for="surveyNumber" class="col-form-label">Survey Number</label>
-                    <div class="col-sm-12">
-                        <input type="text" id="surveyNumber" class="form-control" placeholder="Survey Number">
+                <form class="needs-validation" id="inputForm" novalidate>
+                    <div class="form-group">
+                        <label for="surveyNumber" class="col-form-label">Survey Number</label>
+                        <div class="col-sm-12">
+                            <input type="text" id="surveyNumber" class="form-control" placeholder="Survey Number"
+                                   required>
+                            <div class="invalid-feedback">
+                                Please choose a survey number.
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label for="landType" class="col-form-label">Land Type</label>
-                    <div class="col-sm-12">
-                        <select id="landType" class="form-control">
-                            <option>Agriculture</option>
-                            <option>Wet</option>
-                            <option>Waste</option>
-                            <option>Residential</option>
-                            <option>Commercial</option>
-                        </select>
+                    <div class="form-group">
+                        <label for="landType" class="col-form-label">Land Type</label>
+                        <div class="col-sm-12">
+                            <select id="landType" class="form-control" required>
+                                <option>Agriculture</option>
+                                <option>Wet</option>
+                                <option>Waste</option>
+                                <option>Residential</option>
+                                <option>Commercial</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Please choose a land type.
+                            </div>
+                        </div>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="boundaries">Boundaries</label>
-                    <div class="col-sm-12">
-                        <textarea id="boundaries" class="form-control" style="resize: none;" rows="3" cols="5"
-                                  readonly></textarea>
+                    <div class="form-group">
+                        <label for="boundaries">Boundaries</label>
+                        <div class="col-sm-12">
+                            <textarea id="boundaries" class="form-control readonly" style="resize: none;" rows="3"
+                                      cols="5"
+                                      required></textarea>
+                            <div class="invalid-feedback">
+                                Please choose an area from the map.
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="col-sm-12 d-flex justify-content-center">
-                    <button type="submit" class="btn btn-outline-success" id="saveBtn">Save</button>
-                </div>
+                    <div class="col-sm-12 d-flex justify-content-center">
+                        <button type="submit" class="btn btn-outline-success" id="saveBtn">Save</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -121,7 +133,13 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
+<script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
 <script>
+    'use strict';
+
+    $(".readonly").on('keydown paste', function (e) {
+        e.preventDefault();
+    });
 
     mapboxgl.accessToken = 'pk.eyJ1Ijoic2FnYXJrcyIsImEiOiJjanI2bXQxa20wMmR0NDJtczd6ZzAxaG05In0.hKpKurChhDYW0eo4R48wjw';
     /* eslint-disable */
@@ -219,14 +237,49 @@
         }
     });
 
-    $("#saveBtn").click(() => {
+    $("#saveBtn").click((e) => {
+        e.preventDefault();
+        let form = $('#inputForm')[0];
+        form.classList.add('was-validated');
+        if (form.checkValidity() === false) {
+            return
+        }
+        let threshold = 0;
+        let input = $('#boundaries');
+        let newSurvey = JSON.parse(input.val());
+        let id = newSurvey.id;
+        let intersections = [];
+        Object.values(surveys).forEach(survey => {
+            try {
+                let intersection = turf.intersect(survey.boundaries, newSurvey);
+                if (intersection)
+                    intersections.push(survey.boundaries);
+            } catch (e) {
+
+            }
+        });
+        let intersectionArea = intersections.map(turf.area).reduce((x, y) => x + y, 0);
+        if (intersectionArea >= threshold) {
+            intersections.forEach(intersection => {
+                newSurvey = turf.difference(newSurvey, intersection);
+            })
+        } else {
+            draw.delete(id);
+            showModal("Too much overlapping area, do the survey again");
+            return;
+        }
+        newSurvey.id = id;
+        //draw.delete(id);
+        draw.add(newSurvey);
+        let boundaries = JSON.stringify(newSurvey);
+        input.val(boundaries);
         $.ajax({
             type: "POST",
             url: '/saveSurvey',
             data: JSON.stringify({
                 surveyNumber: $('#surveyNumber').val(),
                 landType: $('#landType').val(),
-                boundaries: $('#boundaries').val()
+                boundaries: boundaries
             }),
             success: (response) => {
                 console.log(response);
@@ -242,7 +295,7 @@
             },
             contentType: "application/json",
             dataType: "json"
-        })
+        });
     });
 
 </script>
