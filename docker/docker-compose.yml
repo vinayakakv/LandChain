@@ -17,3 +17,4 @@ services:
    - "8080:8080"
   volumes:
    - "../project-final:/home/cryptoman/app"
+   - "$HOME/cryptoland/keys:/keys"
