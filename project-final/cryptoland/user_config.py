@@ -71,6 +71,7 @@ class UserConfig:
         return {"error": False, "data": result}
 
     def get_system_user(self):
+        self.__init__()
         return {k: self.users[k] for k in self.users if k != "priv.key"}
 
     def get_user_name(self):
