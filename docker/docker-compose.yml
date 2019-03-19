@@ -12,9 +12,10 @@ services:
    - "$HOME/bigchaindb_docker/mongodb/data/configdb:/data/configdb"
    - "$HOME/bigchaindb_docker/tendermint:/tendermint"
  cryptimage:
+  user: root
   image: vinayakakv/cryptimage
   ports:
    - "8080:8080"
   volumes:
    - "../project-final:/home/cryptoman/app"
-   - "$HOME/cryptoland/keys:/keys"
+   - "$HOME/.config/cryptoland/keys:/keys"
