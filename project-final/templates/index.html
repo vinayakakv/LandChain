@@ -17,25 +17,15 @@
         <div class="col-md-3"></div>
         <div class="col-md-6 col-sm-12">
             <div class="jumbotron">
-                <h1 class="display-4">CryptoLand | Login</h1>
+                <h1 class="display-4" id="title">CryptoLand |
+                    <small>Signup</small>
+                </h1>
                 <hr class="my-4">
-                <div>
+                <div id="signup">
                     <div class="form-group">
-                        <label>User ID</label>
+                        <label for="user_name">User Name</label>
                         <input type="text" class="form-control"
-                               placeholder="User ID">
-                    </div>
-                    <div class="form-group">
-                        <label>Password</label>
-                        <input type="password" class="form-control" placeholder="Password">
-                    </div>
-                    <div class="form-group">
-                        <label>Login as</label>
-                        <select class="form-control">
-                            <option> Normal User</option>
-                            <option> Surveyor</option>
-                            <option> Registrar</option>
-                        </select>
+                               placeholder="User Name" id="user_name">
                     </div>
                     <div class="form-group row pt-3  ">
                         <div class="col-4 d-flex justify-content-start">
@@ -45,9 +35,37 @@
 
                         </div>
                         <div class="col-4 d-flex justify-content-end">
-                            <button class="btn btn-outline-primary btn-lg">Login</button>
+                            <button class="btn btn-outline-primary btn-lg" id="signup_btn">Create Account</button>
                         </div>
                     </div>
+                </div>
+                <div id="login">
+                    <div class="form-group">
+                        <label for="name">User Name</label>
+                        <input type="text" id="name" class="form-control" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="pub_key">Public Key</label>
+                        <input type="text" id="pub_key" class="form-control" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="user_type">Login as</label>
+                        <input type="text" id="user_type" class="form-control" disabled>
+                    </div>
+                    <div class="form-group row pt-3  ">
+                        <div class="col-4 d-flex justify-content-start">
+                            <button class="btn btn-outline-secondary btn-lg">Continue as Guest</button>
+                        </div>
+                        <div class="col-4">
+
+                        </div>
+                        <div class="col-4 d-flex justify-content-end">
+                            <button class="btn btn-outline-primary btn-lg" id="login_btn">Login</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="errors">
+
                 </div>
             </div>
 
@@ -58,8 +76,9 @@
 
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
-        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+<script
+        src="http://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
         crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
         integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
@@ -67,5 +86,60 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
+<script>
+    'use strict';
+    let login_div = $('#login');
+    let signup_div = $('#signup');
+    login_div.hide();
+    $(() => {
+        $.ajax({
+            type: "POST",
+            url: '/getSystemUser',
+            success: response => {
+                if (!response.success) {
+                    $('#errors').text(response.message);
+                    return;
+                }
+                if (!$.isEmptyObject(response.data)) {
+                    $('#title').text("CryptoLand | Login");
+                    signup_div.hide();
+                    login_div.show();
+                    [
+                        "name",
+                        "pub_key",
+                        "user_type"
+                    ].forEach(element => $("#" + element).val(response.data[element.replace('_', '.')]));
+                    if (!response.data.user_type) {
+                        $('#errors').text("Your request for user registration has not been settled yet");
+                        $('#login_btn').prop('disabled', true)
+                    }
+                }
+            }
+        })
+    });
+    let signup_btn = $('#signup_btn');
+    signup_btn.click(() => {
+        let errors = $('#errors');
+        $.ajax({
+            type: "POST",
+            url: '/addSystemUser',
+            contentType: "application/json",
+            dataType: "json",
+            data: JSON.stringify({
+                user_name: $('#user_name').val().trim()
+            }),
+            success: (response) => {
+                if (!response.success) {
+                    errors.text(response.message);
+                    return;
+                }
+                errors.text("User created successfully..");
+                signup_btn.text("Login");
+                signup_btn.unbind('click');
+                signup_btn.click(() => location.reload());
+            }
+        })
+    })
+</script>
 </body>
 </html>
