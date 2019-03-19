@@ -85,7 +85,7 @@
                             <input type="text" id="surveyNumber" class="form-control" placeholder="Survey Number"
                                    required>
                             <div class="invalid-feedback">
-                                Please choose a survey number.
+                                Please enter a survey number.
                             </div>
                         </div>
                     </div>
@@ -173,8 +173,12 @@
         $.ajax({
             type: "POST",
             url: '/getSurveys',
-            success: (data) => {
-                data.forEach((x) => {
+            success: (response) => {
+                if (!response.success) {
+                    showModal("Error", "Failed to retrieve surveys");
+                    return;
+                }
+                response.data.forEach((x) => {
                     surveys[x.boundaries.id] = x;
                     draw.add(x.boundaries);
                 })
