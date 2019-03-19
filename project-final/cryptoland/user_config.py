@@ -55,7 +55,7 @@ class UserConfig:
 
     def create_user(self, user_name):
         if self.users.keys():
-            return {"error": True, "message": "User exists"}
+            return {"success": False, "message": "User exists"}
         user = generate_keypair()
         self.users = {
             'pub.key': user.public_key,
@@ -68,7 +68,7 @@ class UserConfig:
         with open(self.keydir / 'priv.key', 'w') as f:
             f.write(user.private_key)
         result = self.transactionHelper.create_user_asset(user, user_name)
-        return {"error": False, "data": result}
+        return {"success": True, "data": result}
 
     def get_system_user(self):
         self.__init__()
