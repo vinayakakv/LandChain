@@ -25,10 +25,3 @@ class Survey:
                 return [json.loads(x) for x in f.readlines() if x != " "]
         except IOError:
             return []
-
-
-
-class LandOperations:
-    def __init__(self):
-        self.driver = BigchainDB()
-        pass
