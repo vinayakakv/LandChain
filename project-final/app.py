@@ -35,6 +35,24 @@ def add_system_user():
     return jsonify(user.create_user(user_name))
 
 
+@app.route('/registerUser', methods=['POST', 'GET'])
+def register_user():
+    req = json.loads(request.data)
+    public_key = req['public_key']
+    user_type = req['user_type'].strip().upper()
+    return jsonify(user.register_user(public_key, user_type))
+
+
+@app.route('/getRegistredUsers', methods=['POST', 'GET'])
+def get_registered_users():
+    return jsonify(user.get_registered_users())
+
+
+@app.route('/getUserRequests', methods=['POST', 'GET'])
+def get_user_requests():
+    return jsonify(user.get_user_requests())
+
+
 @app.route('/')
 def login_page():
     return render_template('index.html')
