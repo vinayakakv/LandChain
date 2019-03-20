@@ -45,8 +45,8 @@
                         <input type="text" id="name" class="form-control" disabled>
                     </div>
                     <div class="form-group">
-                        <label for="pub_key">Public Key</label>
-                        <input type="text" id="pub_key" class="form-control" disabled>
+                        <label for="pub-key">Public Key</label>
+                        <input type="text" id="pub-key" class="form-control" disabled>
                     </div>
                     <div class="form-group">
                         <label for="user_type">Login as</label>
@@ -106,9 +106,9 @@
                     login_div.show();
                     [
                         "name",
-                        "pub_key",
+                        "pub-key",
                         "user_type"
-                    ].forEach(element => $("#" + element).val(response.data[element.replace('_', '.')]));
+                    ].forEach(element => $("#" + element).val(response.data[element.replace('-', '.')]));
                     if (!response.data.user_type) {
                         $('#errors').text("Your request for user registration has not been settled yet");
                         $('#login_btn').prop('disabled', true)
