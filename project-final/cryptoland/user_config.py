@@ -157,7 +157,7 @@ class UserConfig:
                     to_burn = True
             if user_asset['data']['type'] == "CREATE_USER":
                 burn_id = user_asset['id']
-        if to_burn:
+        if to_burn and burn_id:
             transactions = self.transactionHelper.find_transactions(burn_id)
             if len(transactions) == 1:  # not burnt yet
                 transaction = transactions[0]
