@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous">
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.css'
+          type='text/css'/>
+    <style>
+    </style>
+    <title>Home</title>
+</head>
+
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">CryptoLand | Government</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link active" href="#">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="register.html">Register Users <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="view.html">View Users <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="../about.html">About</a>
+            </li>
+        </ul>
+        <span class="navbar-text mr-3" id="name">
+                Logged in as : <span class="name"></span>
+        </span>
+        <div class="form-inline my-2 my-lg-0">
+            <button class="btn btn-outline-danger my-2 my-sm-0" id="logout" type="submit">Logout</button>
+        </div>
+    </div>
+</nav>
+<div class="container-fluid mt-5">
+    <div class="row ">
+        <div class="col-9">
+            <h2 class="display-4">Welcome</h2>
+            <div class="row  mt-4">
+                <div class="col-4 col-xs">
+                    <div class="card text-white bg-dark">
+                        <div class="card-body text-center">
+                            <h1 class="card-title" id="userRequests"></h1>
+                            <h4 class="card-subtitle mb-2 text-muted">Pending Requests</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4 col-xs">
+                    <div class="card text-white bg-dark">
+                        <div class="card-body text-center">
+                            <h1 class="card-title" id="surveyor_count"></h1>
+                            <h4 class="card-subtitle mb-2 text-muted">Surveyors</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4 col-xs">
+                    <div class="card text-white bg-dark">
+                        <div class="card-body text-center">
+                            <h1 class="card-title" id="user_count"></h1>
+                            <h4 class="card-subtitle mb-2 text-muted">Users</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-3  border-left border-dark">
+            <h2>Details</h2>
+            <table class="mt-5 table table-hover">
+                <tr>
+                    <td>Name</td>
+                    <td><span class="name"></span></td>
+                </tr>
+                <tr>
+                    <td>Id</td>
+                    <td><span id="key"></span></td>
+                </tr>
+            </table>
+            <a class="btn btn-outline-dark" href="register.html" role="button"> Register Users </a>
+        </div>
+    </div>
+</div>
+<script
+        src="http://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+<script>
+    $(() => {
+        let requests = [{
+            type: "POST",
+            url: '/getSystemUser',
+            success: response => {
+                if (!response.success)
+                    return;
+                $('.name').text(response.data.name);
+                $('#key').text(response.data['pub.key'].substr(0, 6) + '...');
+            }
+        }, {
+            type: "POST",
+            url: '/getUserRequests',
+            success: response => {
+                if (!response.success)
+                    return;
+                $('#userRequests').text(response.data.length);
+            }
+        }, {
+            type: "POST",
+            url: '/getRegisteredUsers',
+            success: response => {
+                if (!response.success)
+                    return;
+                let surveyor_count = 0, user_count = 0;
+                response.data.forEach(user => {
+                    if (user.data.user_type === "SURVEYOR")
+                        surveyor_count++;
+                    else if (user.data.user_type === "USER")
+                        user_count++;
+                });
+                $('#surveyor_count').text(surveyor_count);
+                $('#user_count').text(user_count);
+            }
+        }
+        ];
+        requests.forEach(request => $.ajax(request));
+    })
+</script>
+</body>
+</html>

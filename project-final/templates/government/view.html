@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous">
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.css'
+          type='text/css'/>
+    <style>
+    </style>
+    <title>View</title>
+</head>
+
+<body>
+<nav class="navbar sticky-top navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">CryptoLand | Government</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse " id="navbarSupportedContent">
+        <ul class="navbar-nav  mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="home.html">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="register.html">Register Users <span
+                        class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="view.html">View Users <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="../about.html">About</a>
+            </li>
+        </ul>
+        <span class="navbar-text mr-3" id="name">
+                Logged in as : <span class="name"></span>
+        </span>
+        <div class="form-inline my-2 my-lg-0">
+            <button class="btn btn-outline-danger my-2 my-sm-0" id="logout" type="submit">Logout</button>
+        </div>
+    </div>
+</nav>
+<div class="container-fluid mt-5">
+    <div class="modal fade" id="warningModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Warning</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <span>Message goes here</span>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row ">
+        <h1 class="display-4"></h1>
+        <div class="table-responsive">
+            <table class="table text-center" style="margin: auto">
+                <thead class="thead-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Public Key</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script
+        src="http://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+<script>
+    let showModal = (title, message) => {
+        let modal = $('#warningModal');
+        modal.find('.modal-body').text(title);
+        modal.find('.modal-body').html(message);
+        modal.modal();
+    };
+    $(() => {
+        let requests = [{
+            type: "POST",
+            url: '/getSystemUser',
+            success: response => {
+                if (!response.success)
+                    return;
+                $('.name').text(response.data.name);
+                $('#key').text(response.data['pub.key'].substr(0, 6) + '...');
+            }
+        }, {
+            type: "POST",
+            url: '/getRegisteredUsers',
+            success: response => {
+                if (!response.success)
+                    return;
+                if (response.data.length === 0) {
+                    $(".table").hide();
+                    $(".display-4").text("No requests...Come Later?");
+                    return;
+                }
+                response.data.forEach((user, i) => {
+                    let class_name = "table-primary";
+                    switch (user.data['user_type']) {
+                        case "GOVERNMENT":
+                            class_name = "table-active";
+                            break;
+                        case "SURVEYOR":
+                            class_name = "table-success";
+                            break;
+                        default:
+                            break;
+                    }
+                    $(".table tr:last").after(
+                        `<tr class="${class_name}">` +
+                        `<td> ${i + 1} </td>` +
+                        `<td class="key"> ${user.data.key} </td>` +
+                        `<td> ${user.data.name} </td>` +
+                        `<td> ${user.data.user_type} </td>` +
+                        "</tr>"
+                    )
+                });
+            }
+        }
+        ];
+        requests.forEach(request => $.ajax(request));
+    });
+</script>
+</body>
+</html>

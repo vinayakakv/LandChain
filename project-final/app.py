@@ -7,9 +7,9 @@ app = Flask(__name__, static_url_path='')
 user = UserConfig()
 
 
-@app.route('/surveyor/<path:path>')
-def send_file(path):
-    return send_from_directory('templates/surveyor', path + '.html')
+@app.route('/<path:outerdir>/<path:path>')
+def send_file(outerdir,path):
+    return send_from_directory('templates/', outerdir + '/' + path + '.html')
 
 
 @app.route('/saveSurvey', methods=['POST'])
@@ -35,7 +35,7 @@ def add_system_user():
     return jsonify(user.create_user(user_name))
 
 
-@app.route('/registerUser', methods=['POST', 'GET'])
+@app.route('/registerUser', methods=['POST'])
 def register_user():
     req = json.loads(request.data)
     public_key = req['public_key']
