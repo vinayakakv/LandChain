@@ -140,7 +140,13 @@ class UserConfig:
     def get_user_requests(self):
         if self.get_user_type() != "GOVERNMENT":
             return {"success": False, "message": "Only Government user retrieve user requests"}
-        return {"success": True, "data": self.transactionHelper.find_asset("CREATE_USER")}
+        assets = self.transactionHelper.find_asset("CREATE_USER")
+        result = []
+        for asset in assets:
+            transactions = self.transactionHelper.find_transactions(asset['id'])
+            if transactions[-1]['operation'] == "CREATE":
+                result.append(asset)
+        return {"success": True, "data": result}
 
     def get_user_type(self):
         if self.user == {}:
