@@ -43,7 +43,7 @@ def register_user():
     return jsonify(user.register_user(public_key, user_type))
 
 
-@app.route('/getRegistredUsers', methods=['POST', 'GET'])
+@app.route('/getRegisteredUsers', methods=['POST', 'GET'])
 def get_registered_users():
     return jsonify(user.get_registered_users())
 
