@@ -143,8 +143,8 @@ class UserConfig:
         assets = self.transactionHelper.find_asset("CREATE_USER")
         result = []
         for asset in assets:
-            transactions = self.transactionHelper.find_transactions(asset['id'])
-            if transactions[-1]['operation'] == "CREATE":
+            similar = self.transactionHelper.find_asset(asset['data']['key'])
+            if len(similar) == 1:
                 result.append(asset)
         return {"success": True, "data": result}
 
