@@ -22,6 +22,32 @@ class TransactionHelper:
         sent_creation_tx = self.driver.transactions.send_commit(fulfilled_creation_tx)
         return sent_creation_tx
 
+    def transfer_asset(self, last_transaction, asset_id, owner, to):
+        output_index = 0
+        output = last_transaction['outputs'][output_index]
+        transfer_input = {
+            'fulfillment': output['condition']['details'],
+            'fulfills': {
+                'output_index': output_index,
+                'transaction_id': last_transaction['id'],
+            },
+            'owners_before': output['public_keys']
+        }
+        transfer_asset = {
+            'id': asset_id
+        }
+        prepared_transfer_tx = self.driver.transactions.prepare(
+            operation='TRANSFER',
+            asset=transfer_asset,
+            inputs=transfer_input,
+            recipients=to,
+        )
+        fulfilled_transfer_tx = self.driver.transactions.fulfill(
+            prepared_transfer_tx,
+            private_keys=owner.private_key,
+        )
+        return self.driver.transactions.send_commit(fulfilled_transfer_tx)
+
     def find_asset(self, key):
         return self.driver.assets.get(search=key)
 
@@ -29,8 +55,8 @@ class TransactionHelper:
         return self.driver.transactions.get(asset_id=asset_id)
 
 
-# To be done
 GOVERNMENT_PUBKEY = "7t2SxbSo7tRKm7FhsEfTnUgWvKaYKvMTYNeAALcNs4Bk"
+BURN_PUBKEY = "BurnBurnBurnBurnBurnBurnBurnBurnBurnBurnBurn"
 
 
 class UserConfig:
@@ -121,9 +147,26 @@ class UserConfig:
             return None
         user_assets = self.transactionHelper.find_asset(self.user['pub.key'])
         user_type = None
+        to_burn = False
+        burn_id = None
         for user_asset in user_assets:
             if user_asset['data']['type'] == "REGISTER_USER":
                 transactions = self.transactionHelper.find_transactions(user_asset['id'])[-1]
                 if GOVERNMENT_PUBKEY in transactions['outputs'][0]['public_keys']:
                     user_type = user_asset['data']['user_type']
+                    to_burn = True
+            if user_asset['data']['type'] == "CREATE_USER":
+                burn_id = user_asset['id']
+        if to_burn:
+            transactions = self.transactionHelper.find_transactions(burn_id)
+            if len(transactions) == 1:  # not burnt yet
+                transaction = transactions[0]
+                self.transactionHelper.transfer_asset(
+                    transaction,
+                    burn_id,
+                    CryptoKeypair(public_key=self.user['pub.key'],
+                                  private_key=self.user['priv.key']),
+                    BURN_PUBKEY
+                )
+
         return user_type
