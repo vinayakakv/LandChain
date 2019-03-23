@@ -19,3 +19,11 @@ services:
   volumes:
    - "../project-final:/home/cryptoman/app"
    - "$HOME/.config/cryptoland/keys:/keys"
+ cryptimage-govt:
+  user: root
+  image: cryptoland/cryptimage
+  ports:
+   - "8000:8080"
+  volumes:
+   - "../project-final:/home/cryptoman/app"
+   - "$HOME/.config/cryptoland/keys1:/keys"
