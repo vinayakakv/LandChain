@@ -13,7 +13,7 @@ services:
    - "$HOME/bigchaindb_docker/tendermint:/tendermint"
  cryptimage:
   user: root
-  image: vinayakakv/cryptimage
+  image: cryptoland/cryptimage
   ports:
    - "8080:8080"
   volumes:
