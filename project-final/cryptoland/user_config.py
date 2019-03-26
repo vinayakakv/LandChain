@@ -10,17 +10,28 @@ class TransactionHelper:
         self.driver = BigchainDB(ip)
 
     def create_user_asset(self, owner, user_asset):
-        prepared_creation_tx = self.driver.transactions.prepare(
+        prepared_tx = self.driver.transactions.prepare(
             operation='CREATE',
             signers=owner.public_key,
             asset=user_asset,
         )
-        fulfilled_creation_tx = self.driver.transactions.fulfill(
-            prepared_creation_tx,
+        fulfilled_tx = self.driver.transactions.fulfill(
+            prepared_tx,
             private_keys=owner.private_key
         )
-        sent_creation_tx = self.driver.transactions.send_commit(fulfilled_creation_tx)
-        return sent_creation_tx
+        return self.driver.transactions.send_commit(fulfilled_tx)
+
+    def create_divisible_asset(self, creator, owner_pubkey, asset, quantity):
+        prepared_tx = self.driver.transactions.prepare(
+            operation='CREATE',
+            signers=creator.public_key,
+            recipients=[([owner_pubkey], quantity)],
+            asset=asset
+        )
+        fulfilled_tx = self.driver.transactions.fulfill(
+            prepared_tx, private_keys=creator.private_key
+        )
+        return self.driver.transactions.send_commit(fulfilled_tx)
 
     def transfer_asset(self, last_transaction, asset_id, owner, to):
         output_index = 0
@@ -36,17 +47,17 @@ class TransactionHelper:
         transfer_asset = {
             'id': asset_id
         }
-        prepared_transfer_tx = self.driver.transactions.prepare(
+        prepared_tx = self.driver.transactions.prepare(
             operation='TRANSFER',
             asset=transfer_asset,
             inputs=transfer_input,
             recipients=to,
         )
-        fulfilled_transfer_tx = self.driver.transactions.fulfill(
-            prepared_transfer_tx,
+        fulfilled_tx = self.driver.transactions.fulfill(
+            prepared_tx,
             private_keys=owner.private_key,
         )
-        return self.driver.transactions.send_commit(fulfilled_transfer_tx)
+        return self.driver.transactions.send_commit(fulfilled_tx)
 
     def find_asset(self, key):
         return self.driver.assets.get(search=key)
