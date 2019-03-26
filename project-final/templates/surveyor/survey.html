@@ -275,6 +275,7 @@
         newSurvey.id = id;
         //draw.delete(id);
         draw.add(newSurvey);
+        let area = turf.area(newSurvey) * 1000000000;
         let boundaries = JSON.stringify(newSurvey);
         input.val(boundaries);
         $.ajax({
@@ -283,7 +284,8 @@
             data: JSON.stringify({
                 surveyNumber: $('#surveyNumber').val(),
                 landType: $('#landType').val(),
-                boundaries: boundaries
+                boundaries: boundaries,
+                area: area
             }),
             success: (response) => {
                 console.log(response);
