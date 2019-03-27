@@ -1,4 +1,4 @@
-from cryptoland.user_config import TransactionHelper
+from cryptoland.transaction_helper import TransactionHelper
 from bigchaindb_driver.crypto import generate_keypair
 import argparse
 import pathlib

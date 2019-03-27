@@ -2,7 +2,7 @@ import json
 
 from bigchaindb_driver.crypto import CryptoKeypair
 
-from .user_config import TransactionHelper
+from cryptoland.transaction_helper import TransactionHelper
 from .user_config import UserConfig, GOVERNMENT_PUBKEY
 
 user = UserConfig()
