@@ -121,14 +121,16 @@
             type: "POST",
             url: '/getUserRequests',
             success: response => {
-                if (!response.success)
+                if (!response.success) {
+                    showModal("Error",response.message);
                     return;
+                }
                 if (response.data.length === 0) {
                     $(".table").hide();
                     $(".display-4").text("No requests...Come Later?");
                     return;
                 }
-                response.data.forEach((user, i) => {
+                response.data.reverse().forEach((user, i) => {
                     $(".table tr:last").after(
                         "<tr>" +
                         `<td> ${i + 1} </td>` +
