@@ -40,7 +40,7 @@ class UserConfig:
         with open(self.keydir / 'priv.key', 'w') as f:
             f.write(user.private_key)
         try:
-            result = self.transactionHelper.create_user_asset(user, {
+            result = self.transactionHelper.create_asset(user, {
                 'data': {
                     'type': "CREATE_USER",
                     'key': user.public_key,
@@ -62,7 +62,7 @@ class UserConfig:
         if user_requests and user_requests[-1]['data']['type'] != "CREATE_USER":
             return {"success": False, "message": "Invalid user creation request"}
         try:
-            result = self.transactionHelper.create_user_asset(government, {
+            result = self.transactionHelper.create_asset(government, {
                 'data': {
                     'type': "REGISTER_USER",
                     'key': public_key,

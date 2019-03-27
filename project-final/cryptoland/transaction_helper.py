@@ -5,11 +5,14 @@ class TransactionHelper:
     def __init__(self, ip):
         self.driver = BigchainDB(ip)
 
-    def create_user_asset(self, owner, user_asset):
+    def create_asset(self, owner, asset, recipients=None):
+        if recipients is None:
+            recipients = (owner.public_key,)
         prepared_tx = self.driver.transactions.prepare(
             operation='CREATE',
             signers=owner.public_key,
-            asset=user_asset,
+            asset=asset,
+            recipients=recipients
         )
         fulfilled_tx = self.driver.transactions.fulfill(
             prepared_tx,

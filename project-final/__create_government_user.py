@@ -25,7 +25,7 @@ with open(keydir / 'priv.key', 'w+') as f:
     f.write(government.private_key)
 
 print("Committing Transaction to BigchainDB...")
-res = tr.create_user_asset(government, {
+res = tr.create_asset(government, {
     'data': {
         'type': "REGISTER_USER",
         'key': government.public_key,
