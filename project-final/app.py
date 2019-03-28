@@ -56,7 +56,7 @@ def register_user():
 
 @app.route('/getRegisteredUsers', methods=['POST', 'GET'])
 def get_registered_users():
-    return jsonify(government.get_registered_users())
+    return jsonify(user.get_registered_users())
 
 
 @app.route('/getUserRequests', methods=['POST', 'GET'])

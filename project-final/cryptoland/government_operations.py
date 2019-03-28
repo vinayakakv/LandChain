@@ -8,11 +8,6 @@ class GovernmentOperations:
     def __init__(self, user: UserConfig):
         self.config = user
 
-    def get_registered_users(self):
-        if self.config.get_user_type() != "GOVERNMENT":
-            return {"success": False, "message": "Only Government user retrieve register user"}
-        return {"success": True, "data": self.config.transactionHelper.find_asset("REGISTER_USER")}
-
     def get_user_requests(self):
         if self.config.get_user_type() != "GOVERNMENT":
             return {"success": False, "message": "Only Government user retrieve user requests"}
@@ -27,7 +22,7 @@ class GovernmentOperations:
     def register_user(self, public_key, user_type):
         if self.config.get_user_type() != "GOVERNMENT":
             return {"success": False, "message": "Only Government user can register user"}
-        registered_users = [x['data']['key'] for x in self.get_registered_users()['data']]
+        registered_users = [x['data']['key'] for x in self.config.get_registered_users()['data']]
         if public_key in registered_users:
             return {"success": False, "message": "User already registered"}
         government = CryptoKeypair(public_key=self.config.user['pub.key'], private_key=self.config.user['priv.key'])

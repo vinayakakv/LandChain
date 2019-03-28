@@ -96,3 +96,6 @@ class UserConfig:
                 )
 
         return user_type
+
+    def get_registered_users(self):
+        return {"success": True, "data": self.transactionHelper.find_asset("REGISTER_USER")}
