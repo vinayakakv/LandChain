@@ -113,6 +113,11 @@
                         $('#errors').text("Your request for user registration has not been settled yet");
                         $('#login_btn').prop('disabled', true)
                     }
+                    else {
+                        $('#login_btn').click(()=>{
+                            window.location.href = response.data.user_type.toLowerCase() + "/home.html"
+                        })
+                    }
                 }
             }
         })
@@ -140,6 +145,7 @@
             }
         })
     })
+
 </script>
 </body>
 </html>
