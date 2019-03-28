@@ -5,7 +5,7 @@ from bigchaindb_driver.exceptions import MissingPrivateKeyError
 
 from cryptoland.transaction_helper import TransactionHelper
 
-GOVERNMENT_PUBKEY = "7t2SxbSo7tRKm7FhsEfTnUgWvKaYKvMTYNeAALcNs4Bk"
+GOVERNMENT_PUBKEY = "9izVdtz7QKJjFnEUFYFR5bP4x8pUq9ckEZ2dnMKBHeVR"
 BURN_PUBKEY = "BurnBurnBurnBurnBurnBurnBurnBurnBurnBurnBurn"
 
 
@@ -23,6 +23,9 @@ class UserConfig:
                 self.user = {}
                 return
             self.user['name'] = self.get_user_name()
+            if self.user['name'] is None:
+                self.user = {}
+                return
             self.user['user_type'] = self.get_user_type()
 
     def create_user(self, user_name):
@@ -75,12 +78,16 @@ class UserConfig:
             return {"success": False, "message": "Benami Government User!"}
 
     def get_system_user(self):
-        self.__init__()
+        if not self.user.get('user_type', None):
+            self.__init__()
         return {k: self.user[k] for k in self.user if k != "priv.key"}
 
     def get_user_name(self):
-        user_asset = self.transactionHelper.find_asset(self.user['pub.key'])[0]
-        return user_asset['data']['name']
+        user_assets = self.transactionHelper.find_asset(self.user['pub.key'])
+        if user_assets:
+            return user_assets[0]['data']['name']
+        else:
+            return None
 
     def get_registered_users(self):
         if self.get_user_type() != "GOVERNMENT":
@@ -101,8 +108,10 @@ class UserConfig:
     def get_user_type(self):
         if self.user == {}:
             return None
+        user_type = self.user.get('user_type', None)
+        if user_type is not None:
+            return user_type
         user_assets = self.transactionHelper.find_asset(self.user['pub.key'])
-        user_type = None
         to_burn = False
         burn_id = None
         for user_asset in user_assets:
