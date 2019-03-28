@@ -1,6 +1,6 @@
 import json
 
-from flask import Flask, render_template, send_from_directory, request, jsonify
+from flask import Flask, render_template, send_from_directory, request, jsonify, abort
 
 from cryptoland.land_operations import Survey
 from cryptoland.user_config import UserConfig
@@ -9,9 +9,14 @@ app = Flask(__name__, static_url_path='')
 user = UserConfig()
 
 
-@app.route('/<path:outerdir>/<path:path>')
-def send_file(outerdir, path):
-    return send_from_directory('templates/', outerdir + '/' + path + '.html')
+@app.route('/<string:role>/<path:path>')
+def send_file(role, path):
+    if role == "guest":
+        return render_template(path)
+    elif role.upper() == user.get_user_type():
+        return send_from_directory('templates/', role + '/' + path)
+    else:
+        abort(403)
 
 
 @app.route('/saveSurvey', methods=['POST'])
