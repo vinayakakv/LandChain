@@ -2,11 +2,13 @@ import json
 
 from flask import Flask, render_template, send_from_directory, request, jsonify, abort
 
+from cryptoland.government_operations import GovernmentOperations
 from cryptoland.land_operations import Survey
 from cryptoland.user_config import UserConfig
 
 app = Flask(__name__, static_url_path='')
 user = UserConfig()
+government = GovernmentOperations(user)
 
 
 @app.route('/<string:role>/<path:path>')
@@ -49,17 +51,17 @@ def register_user():
     req = json.loads(request.data)
     public_key = req['public_key']
     user_type = req['user_type'].strip().upper()
-    return jsonify(user.register_user(public_key, user_type))
+    return jsonify(government.register_user(public_key, user_type))
 
 
 @app.route('/getRegisteredUsers', methods=['POST', 'GET'])
 def get_registered_users():
-    return jsonify(user.get_registered_users())
+    return jsonify(government.get_registered_users())
 
 
 @app.route('/getUserRequests', methods=['POST', 'GET'])
 def get_user_requests():
-    return jsonify(user.get_user_requests())
+    return jsonify(government.get_user_requests())
 
 
 @app.route('/')
