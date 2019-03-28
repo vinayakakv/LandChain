@@ -3,13 +3,12 @@ import json
 from bigchaindb_driver.crypto import CryptoKeypair
 
 from cryptoland.transaction_helper import TransactionHelper
-from .user_config import UserConfig, GOVERNMENT_PUBKEY
-
-user = UserConfig()
+from .user_config import GOVERNMENT_PUBKEY
 
 
 class Survey:
-    def __init__(self, request):
+    def __init__(self, request, userconfig):
+        self.user = userconfig
         self.transactionHelper = TransactionHelper("http://bigchaindb:9984")
         request = json.loads(request)
         self.surveyNumber = request['surveyNumber']
@@ -40,7 +39,7 @@ class Survey:
                 "type": self.type
             }
         }
-        current_user = user.user
+        current_user = self.user.user
         keypair = CryptoKeypair(public_key=current_user['pub.key'],
                                 private_key=current_user['priv.key'])
         print(asset, keypair)

@@ -23,7 +23,7 @@ def send_file(role, path):
 def save_survey():
     if user.get_user_type() != "SURVEYOR":
         return jsonify({"success": False, "message": "Only Surveyor can survey"})
-    s = Survey(request.data)
+    s = Survey(request.data, user)
     return jsonify({"success": True, "data": json.loads(str(s))})
 
 
