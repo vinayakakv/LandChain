@@ -243,7 +243,11 @@
         let form = $('#inputForm')[0];
         form.classList.add('was-validated');
         if (form.checkValidity() === false) {
-            return
+            return;
+        }
+        if (Object.values(surveys).map(x=>x.surveyNumber).indexOf($('#surveyNumber').val()) != -1){
+            showModal("Error", "Survey Number is not unique");
+            return;
         }
         let threshold = 0;
         let input = $('#boundaries');
