@@ -1,7 +1,7 @@
 version: '3'
 services: 
  bigchaindb:
-  image: bigchaindb/bigchaindb:all-in-one
+  image: cryptoland/bigchaindb-all-in-one
   ports:
    - "9984:9984"
    - "9985:9985"
@@ -11,6 +11,7 @@ services:
    - "$HOME/bigchaindb_docker/mongodb/data/db:/data/db"
    - "$HOME/bigchaindb_docker/mongodb/data/configdb:/data/configdb"
    - "$HOME/bigchaindb_docker/tendermint:/tendermint"
+   - "$PWD/etc/mongod.conf:/etc/mongod.conf"
  cryptimage:
   user: root
   image: cryptoland/cryptimage
@@ -27,3 +28,11 @@ services:
   volumes:
    - "../project-final:/home/cryptoman/app"
    - "$HOME/.config/cryptoland/keys1:/keys"
+ cryptimage-surveyor:
+  user: root
+  image: cryptoland/cryptimage
+  ports:
+   - "8088:8080"
+  volumes:
+   - "../project-final:/home/cryptoman/app"
+   - "$HOME/.config/cryptoland/keys2:/keys"
