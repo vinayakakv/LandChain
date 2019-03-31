@@ -20,7 +20,49 @@ def send_file(role, path):
     elif role.upper() == user.get_user_type():
         return send_from_directory('templates/', role + '/' + path)
     else:
-        abort(403)
+        abort(401)
+
+
+@app.route('/home')
+def serve_home():
+    return send_from_directory('templates/', user.get_user_type().lower() + '/home.html')
+
+
+@app.route('/about')
+def serve_about():
+    return send_from_directory('templates/', user.get_user_type().lower() + '/about.html')
+
+
+@app.route('/survey')
+def serve_survey():
+    if user.get_user_type() == "SURVEYOR":
+        return send_from_directory('templates/', 'surveyor/survey.html')
+    else:
+        abort(401)
+
+
+@app.route('/register')
+def serve_register():
+    if user.get_user_type() == "GOVERNMENT":
+        return send_from_directory('templates/', 'government/register.html')
+    else:
+        abort(401)
+
+
+@app.route('/distribute')
+def serve_distribute():
+    if user.get_user_type() == "GOVERNMENT":
+        return send_from_directory('templates/', 'government/distribute.html')
+    else:
+        abort(401)
+
+
+@app.route('/view')
+def serve_view():
+    if user.get_user_type() == "GOVERNMENT":
+        return send_from_directory('templates/', 'government/view.html')
+    else:
+        abort(401)
 
 
 @app.route('/saveSurvey', methods=['POST'])
