@@ -5,10 +5,12 @@ from flask import Flask, render_template, send_from_directory, request, jsonify,
 from cryptoland.government_operations import GovernmentOperations
 from cryptoland.land_operations import Survey
 from cryptoland.user_config import UserConfig
+from cryptoland.database_helper import DatabaseHelper
 
 app = Flask(__name__, static_url_path='')
 user = UserConfig()
 government = GovernmentOperations(user)
+database_helper = DatabaseHelper('mongodb://bigchaindb:27017/')
 
 
 @app.route('/<string:role>/<path:path>')
@@ -49,7 +51,7 @@ def add_system_user():
 @app.route('/registerUser', methods=['POST'])
 def register_user():
     req = json.loads(request.data)
-    public_key = req['public_key']
+    public_key = req['public_key'].strip()
     user_type = req['user_type'].strip().upper()
     return jsonify(government.register_user(public_key, user_type))
 
@@ -62,6 +64,20 @@ def get_registered_users():
 @app.route('/getUserRequests', methods=['POST', 'GET'])
 def get_user_requests():
     return jsonify(government.get_user_requests())
+
+
+@app.route('/getUserDetails', methods=['POST'])
+def get_user_details():
+    req = json.loads(request.data)
+    public_key = req['public_key']
+    return jsonify(database_helper.get_user_details(public_key))
+
+
+@app.route('/getSurveyorDetails', methods=['POST'])
+def get_surveyor_details():
+    req = json.loads(request.data)
+    public_key = req['public_key']
+    return jsonify(database_helper.get_surveyor_details(public_key))
 
 
 @app.route('/')
