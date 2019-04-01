@@ -30,7 +30,7 @@ def serve_home():
 
 @app.route('/about')
 def serve_about():
-    return send_from_directory('templates/', user.get_user_type().lower() + '/about.html')
+    return send_from_directory('templates/', 'about.html')
 
 
 @app.route('/survey')
@@ -120,6 +120,14 @@ def get_surveyor_details():
     req = json.loads(request.data)
     public_key = req['public_key']
     return jsonify(database_helper.get_surveyor_details(public_key))
+
+
+@app.route('/transferLand', methods=['POST'])
+def transfer_land():
+    req = json.loads(request.data)
+    survey_number = req['surveyNumber']
+    divisions = req['divisions']
+    return jsonify(user.transfer_land(survey_number, divisions))
 
 
 @app.route('/')
