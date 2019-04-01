@@ -117,9 +117,9 @@ def get_user_details():
 
 @app.route('/getSurveyorDetails', methods=['POST'])
 def get_surveyor_details():
-    req = json.loads(request.data)
-    public_key = req['public_key']
-    return jsonify(database_helper.get_surveyor_details(public_key))
+    if user.get_user_type() != "SURVEYOR":
+        return {"success": False, "message": "User is not SURVEYOR"}
+    return jsonify(database_helper.get_surveyor_details(user.get_system_user()['pub.key']))
 
 
 @app.route('/transferLand', methods=['POST'])

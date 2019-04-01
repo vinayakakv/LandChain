@@ -118,7 +118,6 @@
     };
 
     $(() => {
-        let user = {};
         $.ajax({
             type: 'POST',
             url: '/getSystemUser',
@@ -132,11 +131,7 @@
                     $.ajax({
                         url: '/getSurveyorDetails',
                         type: 'POST',
-                        contentType: 'application/json',
                         dataType: 'json',
-                        data: JSON.stringify({
-                            public_key: response.data['pub.key']
-                        }),
                         success: (response) => {
                             $('#totalAcres').text(Math.round(response.data.totalAcre));
                             $('#count').text(response.data.count);
