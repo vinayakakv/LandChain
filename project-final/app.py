@@ -3,7 +3,7 @@ import json
 from flask import Flask, render_template, send_from_directory, request, jsonify, abort
 
 from cryptoland.government_operations import GovernmentOperations
-from cryptoland.land_operations import Survey
+from cryptoland.land_operations import Survey, LandTransactions
 from cryptoland.user_config import UserConfig
 from cryptoland.database_helper import DatabaseHelper
 
@@ -11,6 +11,7 @@ app = Flask(__name__, static_url_path='')
 user = UserConfig()
 government = GovernmentOperations(user)
 database_helper = DatabaseHelper('mongodb://bigchaindb:27017/')
+land_transactions = LandTransactions(user, database_helper)
 
 
 @app.route('/<string:role>/<path:path>')
@@ -127,7 +128,13 @@ def transfer_land():
     req = json.loads(request.data)
     survey_number = req['surveyNumber']
     divisions = req['divisions']
-    return jsonify(user.transfer_land(survey_number, divisions))
+    transaction_id = req['transaction_id']
+    return jsonify(land_transactions.transfer_land(survey_number, divisions, transaction_id))
+
+
+@app.route('/getUserAssets', methods=['POST'])
+def get_user_assets():
+    return jsonify({"success": True, "data": land_transactions.get_user_assets()})
 
 
 @app.route('/')

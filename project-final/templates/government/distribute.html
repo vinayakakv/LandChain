@@ -180,7 +180,7 @@
     map.on('load', () => {
         $.ajax({
             type: "POST",
-            url: '/getSurveys',
+            url: '/getUserAssets',
             success: (response) => {
                 if (!response.success) {
                     showModal("Error", "Failed to retrieve surveys");
@@ -274,7 +274,6 @@
 
     $("#prepareBtn").click((e) => {
         e.preventDefault();
-        e.preventDefault();
         let threshold = 0;
         let form = $('#inputForm')[0];
         form.classList.add('was-validated');
@@ -321,7 +320,11 @@
         let landPart = JSON.parse(input.val());
         let parentSurveyNo = $('#surveyNumber').val();
         let parentSurvey = Object.values(surveys).find(survey => survey.surveyNumber === parentSurveyNo);
-        let remaining = turf.difference(parentSurvey, boundaries, landPart);
+        if (!parentSurvey){
+            showModal("Error","Invalid survey number chosen");
+            return;
+        }
+        let remaining = turf.difference(parentSurvey.boundaries, landPart);
         let newArea = turf.area(landPart) * 1000000000;
         let remainingArea = turf.area(remaining) * 1000000000;
         $.ajax({
@@ -329,15 +332,19 @@
             url: '/transferLand',
             data: JSON.stringify({
                 surveyNumber: $('#surveyNumber').val(),
-                divisions: [{
-                    public_key: "nanna public key",
-                    boundaries: remaining,
-                    area: remainingArea
-                }, {
-                    public_key: $('#toPubKey').val().trim(),
-                    boundaries: landPart,
-                    area: newArea
-                }]
+                transaction_id : parentSurvey.transaction_id,
+                divisions: {
+                    from_data: {
+                        output_index: 0,
+                        boundaries: remaining,
+                        area: remainingArea
+                    },
+                    to_data: {
+                        public_key: $('#toPubKey').val().trim(),
+                        boundaries: landPart,
+                        area: newArea
+                    }
+                }
             }),
             success: (response) => {
                 console.log(response);

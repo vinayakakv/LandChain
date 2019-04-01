@@ -82,4 +82,7 @@ class DatabaseHelper:
             return {"success": True, "data": result}
         except Exception as e:
             return {"success": False, "message": str(e)}
-            pass
+
+    def get_survey(self, survey_number):
+        db = self.client.bigchain
+        return db.assets.find_one({"data.type": "SURVEY", "data.surveyNumber": survey_number}, {"_id": 0})

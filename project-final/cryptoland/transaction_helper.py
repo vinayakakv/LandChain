@@ -39,7 +39,7 @@ class TransactionHelper:
         )
         return self.driver.transactions.send_commit(fulfilled_tx)
 
-    def transfer_asset(self, last_transaction, asset_id, owner, to, output_index=0):
+    def transfer_asset(self, last_transaction, asset_id, owner, to, output_index=0, metadata=None):
         output = last_transaction['outputs'][output_index]
         transfer_input = {
             'fulfillment': output['condition']['details'],
@@ -57,6 +57,7 @@ class TransactionHelper:
             asset=transfer_asset,
             inputs=transfer_input,
             recipients=to,
+            metadata=metadata
         )
         fulfilled_tx = self.driver.transactions.fulfill(
             prepared_tx,
@@ -64,7 +65,8 @@ class TransactionHelper:
         )
         return self.driver.transactions.send_commit(fulfilled_tx)
 
-    def transfer_asset_partial_approval(self, last_transaction, asset_id, owner1, owner2_pubkey, to, output_index=0):
+    def transfer_asset_partial_approval(self, last_transaction, asset_id, owner1, owner2_pubkey, to, output_index=0,
+                                        metadata=None):
         output = last_transaction['outputs'][output_index]
         transfer_input = {
             'fulfillment': output['condition']['details'],
@@ -82,6 +84,7 @@ class TransactionHelper:
             asset=transfer_asset,
             inputs=transfer_input,
             recipients=to,
+            metadata=metadata
         )
         prepared_tx['inputs'][0]['fulfillment'] = None
         message = rapidjson.dumps(prepared_tx, skipkeys=False, ensure_ascii=False,
@@ -136,3 +139,9 @@ class TransactionHelper:
 
     def find_transactions(self, asset_id):
         return self.driver.transactions.get(asset_id=asset_id)
+
+    def get_transaction(self, transaction_id):
+        return self.driver.transactions.retrieve(transaction_id)
+
+    def get_unspent_outputs(self, public_key):
+        return self.driver.outputs.get(public_key, spent=False)
