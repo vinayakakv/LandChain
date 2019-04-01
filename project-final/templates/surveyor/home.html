@@ -133,8 +133,14 @@
                         type: 'POST',
                         dataType: 'json',
                         success: (response) => {
-                            $('#totalAcres').text(Math.round(response.data.totalAcre));
-                            $('#count').text(response.data.count);
+                            if (response.success) {
+                                $('#totalAcres').text(Math.round(response.data.totalAcre));
+                                $('#count').text(response.data.count);
+                            }
+                            else {
+                                $('#totalAcres').text("0");
+                                $('#count').text("0");
+                            }
                         }
                     })
                 }
