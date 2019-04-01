@@ -5,7 +5,7 @@ from bigchaindb_driver.exceptions import MissingPrivateKeyError
 
 from cryptoland.transaction_helper import TransactionHelper
 
-GOVERNMENT_PUBKEY = "97c5EBmPgCB98MtqDSjpBWKvkCPXqEicStgdArrTdyii"
+GOVERNMENT_PUBKEY = "9yz1NjFpJZqNJ38NUN2BQkSkVWMj2EL4PdD545NcU6qo"
 BURN_PUBKEY = "BurnBurnBurnBurnBurnBurnBurnBurnBurnBurnBurn"
 
 

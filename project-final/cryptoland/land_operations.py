@@ -2,13 +2,14 @@ import json
 
 from bigchaindb_driver.crypto import CryptoKeypair
 
+from cryptoland.database_helper import DatabaseHelper
 from cryptoland.transaction_helper import TransactionHelper
 from .user_config import GOVERNMENT_PUBKEY
 
 
 class Survey:
-    def __init__(self, request, userconfig):
-        self.user = userconfig
+    def __init__(self, request, user_config):
+        self.user = user_config
         self.transactionHelper = TransactionHelper("http://bigchaindb:9984")
         request = json.loads(request)
         self.surveyNumber = request['surveyNumber']
@@ -33,7 +34,7 @@ class Survey:
         asset = {
             'data': {
                 "surveyNumber": self.surveyNumber,
-                "boundaries": json.dumps(self.boundaries),
+                "boundaries": self.boundaries,
                 "landType": self.landType,
                 "id": self.id,
                 "type": self.type
@@ -57,6 +58,5 @@ class Survey:
         results = []
         for asset in data:
             asset = asset['data']
-            asset['boundaries'] = json.loads(asset['boundaries'])
             results.append(asset)
         return results
