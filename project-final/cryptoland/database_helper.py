@@ -62,11 +62,7 @@ class DatabaseHelper:
                                 '$divide': [
                                     {
                                         '$toDouble': '$outputs.amount'
-                                    }, {
-                                        '$multiply': [
-                                            1000000000, 4046.86
-                                        ]
-                                    }
+                                    }, 40468.6
                                 ]
                             }
                         }

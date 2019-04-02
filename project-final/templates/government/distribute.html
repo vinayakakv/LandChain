@@ -151,7 +151,7 @@
         container: 'map', // container id
         style: 'mapbox://styles/mapbox/satellite-v9', //hosted style id
         center: [-91.874, 42.760], // starting position
-        zoom: 12 // starting zoom
+        zoom: 14 // starting zoom
     });
 
     let draw = new MapboxDraw({
@@ -325,8 +325,8 @@
             return;
         }
         let remaining = turf.difference(parentSurvey.boundaries, landPart);
-        let newArea = turf.area(landPart) * 1000000000;
-        let remainingArea = turf.area(remaining) * 1000000000;
+        let newArea = Math.round(turf.area(landPart) * 10);
+        let remainingArea = Math.round(turf.area(remaining) * 10);
         $.ajax({
             type: "POST",
             url: '/transferLand',

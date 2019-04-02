@@ -144,7 +144,7 @@
         container: 'map', // container id
         style: 'mapbox://styles/mapbox/satellite-v9', //hosted style id
         center: [-91.874, 42.760], // starting position
-        zoom: 12 // starting zoom
+        zoom: 14 // starting zoom
     });
 
     let draw = new MapboxDraw({
@@ -275,7 +275,7 @@
         newSurvey.id = id;
         //draw.delete(id);
         draw.add(newSurvey);
-        let area = turf.area(newSurvey) * 1000000000;
+        let area = Math.round(turf.area(newSurvey) * 10);
         let boundaries = JSON.stringify(newSurvey);
         input.val(boundaries);
         $.ajax({
