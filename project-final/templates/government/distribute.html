@@ -99,7 +99,7 @@
                                 Please enter a public key.
                             </div>
                             <div id="user_details" class="valid-feedback">
-                                Click Prepare to find the user with specified public key
+                                Click Fetch to find the user with specified public key
                             </div>
                         </div>
                     </div>
@@ -116,7 +116,8 @@
                     </div>
                     <div class="form-group row">
                         <div class="col-sm-6 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-outline-primary" id="prepareBtn">Prepare</button>
+                            <button type="submit" class="btn btn-outline-primary" id="prepareBtn">Fetch
+                            </button>
                         </div>
                         <div class="col-sm-6 d-flex justify-content-center">
                             <button type="submit" class="btn btn-outline-success" id="saveBtn">Save</button>
@@ -169,7 +170,7 @@
         modal.find('.modal-body').text(title);
         modal.find('.modal-body').html(message);
         if (reload)
-            modal.find('.btn').click(() => location.reload(1));
+            modal.find('.btn').click(() => location.reload(true));
         modal.modal();
     };
 
@@ -274,12 +275,33 @@
 
     $("#prepareBtn").click((e) => {
         e.preventDefault();
-        let threshold = 0;
         let form = $('#inputForm')[0];
         form.classList.add('was-validated');
         if (form.checkValidity() === false) {
             return
         }
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json",
+            url: '/getUserDetails',
+            data: JSON.stringify({
+                public_key: $('#toPubKey').val()
+            }),
+            success: (response) => {
+                if (!response.success) {
+                    showModal("Error", response.message);
+                } else {
+                    $('#user_details').text(`User : ${response.data.name}`);
+                    $('#saveBtn').prop('disabled', false);
+                }
+            }
+        })
+    });
+
+    $("#saveBtn").click((e) => {
+        e.preventDefault();
+        let threshold = 0;
         let input = JSON.parse($('#boundaries').val());
         let surveyNumber = $('#surveyNumber').val().trim();
         let survey = Object.values(surveys).find(x => x.surveyNumber === surveyNumber);
@@ -294,45 +316,16 @@
         }
         intersection.id = input.id;
         draw.add(intersection);
-        $.ajax({
-            type: "POST",
-            dataType: "json",
-            contentType: "application/json",
-            url: '/getUserDetails',
-            data: JSON.stringify({
-                public_key: $('#toPubKey').val()
-            }),
-            success: (response) => {
-                if (!response.success) {
-                    showModal("Error", response.message);
-                } else {
-                    $('#user_details').text(`User : ${response.data.name}`);
-                    $('#boundaries').val(JSON.stringify(intersection));
-                    $('#saveBtn').prop('disabled', false);
-                }
-            }
-        })
-    });
-
-    $("#saveBtn").click((e) => {
-        e.preventDefault();
-        let input = $('#boundaries');
-        let landPart = JSON.parse(input.val());
-        let parentSurveyNo = $('#surveyNumber').val();
-        let parentSurvey = Object.values(surveys).find(survey => survey.surveyNumber === parentSurveyNo);
-        if (!parentSurvey){
-            showModal("Error","Invalid survey number chosen");
-            return;
-        }
-        let remaining = turf.difference(parentSurvey.boundaries, landPart);
-        let newArea = Math.round(turf.area(landPart) * 10);
-        let remainingArea = Math.round(turf.area(remaining) * 10);
+        let remaining = turf.difference(survey.boundaries, input);
+        let newArea = Math.round(turf.area(intersection) * 10);
+        let oldArea = Math.round(turf.area(survey.boundaries) * 10);
+        let remainingArea = oldArea - newArea;
         $.ajax({
             type: "POST",
             url: '/transferLand',
             data: JSON.stringify({
                 surveyNumber: $('#surveyNumber').val(),
-                transaction_id : parentSurvey.transaction_id,
+                transaction_id: survey.transaction_id,
                 divisions: {
                     from_data: {
                         output_index: 0,
@@ -341,7 +334,7 @@
                     },
                     to_data: {
                         public_key: $('#toPubKey').val().trim(),
-                        boundaries: landPart,
+                        boundaries: intersection,
                         area: newArea
                     }
                 }
