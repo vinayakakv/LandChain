@@ -34,7 +34,7 @@ class Survey:
         asset = {
             'data': {
                 "surveyNumber": self.surveyNumber,
-                "boundaries": self.boundaries,
+                "boundaries": json.dumps(self.boundaries),
                 "landType": self.landType,
                 "id": self.id,
                 "type": self.type
@@ -58,6 +58,7 @@ class Survey:
         results = []
         for asset in data:
             asset = asset['data']
+            asset['boundaries'] = json.loads(asset['boundaries'])
             results.append(asset)
         return results
 
@@ -74,6 +75,7 @@ class LandTransactions:
         for asset in data:
             transaction_id = asset['id']
             asset = asset['data']
+            asset['boundaries'] = json.loads(asset['boundaries'])
             asset['transaction_id'] = transaction_id
             results.append(asset)
         return results
@@ -102,7 +104,7 @@ class LandTransactions:
             output_index = from_data['output_index']
             metadata = {
                 'asset_id': asset_id,
-                'boundaries': [from_data['boundaries'], to_data['boundaries']]
+                'boundaries': [json.dumps(x) for x in [from_data['boundaries'], to_data['boundaries']]]
             }
             if user_type == "GOVERNMENT":
                 recipients = [([GOVERNMENT_PUBKEY], from_data['area']),
