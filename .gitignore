@@ -4,6 +4,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Keys
+*.key
+
+# Notebooks
+*.ipynb
+
 # C extensions
 *.so
 
