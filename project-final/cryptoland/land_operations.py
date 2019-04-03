@@ -93,6 +93,9 @@ class LandTransactions:
                         if datum['public_key'] == public_key:
                             result['boundaries'] = json.loads(datum['boundaries'])
                             result['area'] = datum['area']
+                            if result['area'] > 0:
+                                subpart_number = datum.get('subpart_number', 0)
+                                result['surveyNumber'] += '/' + str(subpart_number) if subpart_number != 0 else ""
                 else:
                     result['boundaries'] = json.loads(result['boundaries'])
                 result['transaction_id'] = transaction['txid']
@@ -110,7 +113,7 @@ class LandTransactions:
             return {"success": False, "message": "Destination key doesn't correspond to a valid USER"}
         if user_type == "SURVEYOR":
             return {"success": False, "message": "SURVEYOR don't have the privilege to transfer land"}
-        survey = self.databaseHelper.get_survey(survey_number)
+        survey = self.databaseHelper.get_survey(survey_number.split('/')[0])
         if not survey:
             return {"success": False, "message": "Could not fetch survey"}
         try:
@@ -126,6 +129,9 @@ class LandTransactions:
                 'divisions': divisions
             }
             from_area = divisions['from_data']['area']
+            if from_area > 0:
+                metadata['divisions']['from_data']['subpart_number'] = 0
+                metadata['divisions']['to_data']['subpart_number'] = self.databaseHelper.get_subpart_number(asset_id)
             to_area = divisions['to_data']['area']
             if user_type == "GOVERNMENT":
                 recipients = []
@@ -147,6 +153,8 @@ class LandTransactions:
                 if from_area > 0:
                     recipients.append(([GOVERNMENT_PUBKEY, user['pub.key']], from_area))
                 recipients.append(([GOVERNMENT_PUBKEY, to_public_key], to_area))
+                if user['pub.key'] == to_public_key:
+                    raise Exception("Can not transfer the asset to same user")
                 self.transactionHelper.transfer_asset_partial_approval(
                     last_transaction,
                     asset_id,

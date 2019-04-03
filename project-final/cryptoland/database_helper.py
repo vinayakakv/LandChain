@@ -156,3 +156,59 @@ class DatabaseHelper:
             return result
         except:
             return []
+
+    def get_subpart_number(self, asset_id):
+        try:
+            db = self.client.bigchain
+            pipeline = [
+                {
+                    '$match': {
+                        'id': asset_id
+                    }
+                }, {
+                    '$lookup': {
+                        'from': 'transactions',
+                        'localField': 'id',
+                        'foreignField': 'asset.id',
+                        'as': 'transactions'
+                    }
+                }, {
+                    '$unwind': {
+                        'path': '$transactions',
+                        'preserveNullAndEmptyArrays': False
+                    }
+                }, {
+                    '$lookup': {
+                        'from': 'metadata',
+                        'localField': 'transactions.id',
+                        'foreignField': 'id',
+                        'as': 'metadata'
+                    }
+                }, {
+                    '$unwind': {
+                        'path': '$metadata',
+                        'preserveNullAndEmptyArrays': False
+                    }
+                }, {
+                    '$project': {
+                        'from_subpart': '$metadata.metadata.divisions.from_data.subpart_number',
+                        'to_subpart': '$metadata.metadata.divisions.to_data.subpart_number'
+                    }
+                }, {
+                    '$group': {
+                        '_id': 'result',
+                        'subpart_number': {
+                            '$max': {
+                                '$max': [
+                                    '$from_subpart', '$to_subpart'
+                                ]
+                            }
+                        }
+                    }
+                }
+            ]
+            result = list(db.transactions.aggregate(pipeline))
+            subpart_number = result[0]['subpart_number'] if result else 0
+            return subpart_number + 1
+        except Exception as e:
+            raise e
