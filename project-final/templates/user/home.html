@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous">
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css' rel='stylesheet'/>
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.js'></script>
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.css'
+          type='text/css'/>
+    <style>
+    </style>
+    <title>Home</title>
+</head>
+
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">CryptoLand | User</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link active" href="#">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="transact">Transact <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="about">About</a>
+            </li>
+        </ul>
+        <div class="form-inline my-2 my-lg-0">
+            <button class="btn btn-outline-danger my-2 my-sm-0" onclick="window.location.href='/'">Logout</button>
+        </div>
+    </div>
+</nav>
+<div class="container-fluid mt-5">
+    <div class="modal fade" id="warningModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Warning</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <span>Message goes here</span>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row ">
+        <div class="col-9">
+            <h2 class="display-4">Welcome</h2>
+            <div class="row  mt-4">
+                <div class="col-4 col-xs">
+                    <div class="card text-white bg-dark">
+                        <div class="card-body text-center">
+                            <h1 class="card-title"> <span id="totalAcres"> 150 </span>
+                                <small>Acres</small>
+                            </h1>
+                            <h4 class="card-subtitle mb-2 text-muted">Land Owned</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4 col-xs">
+                    <div class="card text-white bg-dark">
+                        <div class="card-body text-center">
+                            <h1 class="card-title" id="count">15</h1>
+                            <h4 class="card-subtitle mb-2 text-muted">Distinct Surveys</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4 col-xs">
+                    <div class="card text-white bg-dark">
+                        <div class="card-body text-center">
+                            <h1 class="card-title" id="count">5</h1>
+                            <h4 class="card-subtitle mb-2 text-muted">Pending Requests</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-3  border-left border-dark">
+            <h2>Details</h2>
+            <table class="mt-5 table table-hover">
+                <tr>
+                    <td>Name</td>
+                    <td id="user_name">$1</td>
+                </tr>
+                <tr>
+                    <td>Id</td>
+                    <td id="public_key">0415524</td>
+                </tr>
+            </table>
+            <a class="btn btn-outline-dark" href="transact" role="button"> Transact </a>
+        </div>
+    </div>
+</div>
+<script
+        src="http://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+<script>
+    let showModal = (title, message) => {
+        let modal = $('#warningModal');
+        modal.find('.modal-body').text(title);
+        modal.find('.modal-body').html(message);
+        modal.modal();
+    };
+
+    $(() => {
+        $.ajax({
+            type: 'POST',
+            url: '/getSystemUser',
+            dataType: 'json',
+            success: (response) => {
+                if (!response.success)
+                    showModal("Error", response.message);
+                else {
+                    $('#user_name').text(response.data.name);
+                    $('#public_key').text(response.data['pub.key'].substr(0, 7) + '...');
+                    /*$.ajax({
+                        url: '/getUserDetails',
+                        type: 'POST',
+                        dataType: 'json',
+                        success: (response) => {
+                            if (response.success) {
+                                $('#totalAcres').text(Math.round(response.data.totalAcre));
+                                $('#count').text(response.data.count);
+                            }
+                            else {
+                                $('#totalAcres').text("0");
+                                $('#count').text("0");
+                            }
+                        }
+                    })*/
+                }
+            }
+        })
+    })
+</script>
+</body>
+</html>

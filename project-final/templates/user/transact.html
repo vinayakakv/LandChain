@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous">
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css' rel='stylesheet'/>
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.js'></script>
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.css'
+          type='text/css'/>
+    <style>
+    </style>
+    <title>Home</title>
+</head>
+
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">CryptoLand | User</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="home">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="#">Transact <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="about">About</a>
+            </li>
+        </ul>
+        <div class="form-inline my-2 my-lg-0">
+            <button class="btn btn-outline-danger my-2 my-sm-0" onclick="window.location.href='/'">Logout</button>
+        </div>
+    </div>
+</nav>
+<div class="container-fluid">
+    <!-- Modal -->
+    <div class="modal fade" id="warningModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Warning</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <span>Message goes here</span>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-9 col-sm-12">
+            <div id='map' style="top:5vh;height:80vh;"></div>
+        </div>
+        <div class="col-md-3 col-sm-12 mt-4 border-left border-dark">
+            <div class="container-fluid">
+                <form class="needs-validation" id="inputForm" novalidate>
+                    <div class="form-group">
+                        <label for="surveyNumber" class="col-form-label">Survey Number</label>
+                        <div class="col-sm-12">
+                            <input type="text" id="surveyNumber" class="form-control" placeholder="Survey Number"
+                                   required>
+                            <div class="invalid-feedback">
+                                Please enter a survey number.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="toPubKey" class="col-form-label">Public Key</label>
+                        <div class="col-sm-12">
+                            <input type="text" id="toPubKey" class="form-control" placeholder="Public Key"
+                                   required>
+                            <div class="invalid-feedback">
+                                Please enter a public key.
+                            </div>
+                            <div id="user_details" class="valid-feedback">
+                                Click Fetch to find the user with specified public key
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="boundaries">Boundaries</label>
+                        <div class="col-sm-12">
+                            <textarea id="boundaries" class="form-control readonly" style="resize: none;" rows="3"
+                                      cols="5"
+                                      required></textarea>
+                            <div class="invalid-feedback">
+                                Please choose an area from the map.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-sm-6 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-outline-primary" id="prepareBtn">Fetch
+                            </button>
+                        </div>
+                        <div class="col-sm-6 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-outline-success" id="saveBtn">Save</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script
+        src="http://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+<script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+<script>
+    'use strict';
+
+    $(".readonly").on('keydown paste', function (e) {
+        e.preventDefault();
+    });
+
+    mapboxgl.accessToken = 'pk.eyJ1Ijoic2FnYXJrcyIsImEiOiJjanI2bXQxa20wMmR0NDJtczd6ZzAxaG05In0.hKpKurChhDYW0eo4R48wjw';
+    /* eslint-disable */
+    let map = new mapboxgl.Map({
+        container: 'map', // container id
+        style: 'mapbox://styles/mapbox/satellite-v9', //hosted style id
+        center: [-91.874, 42.760], // starting position
+        zoom: 14 // starting zoom
+    });
+
+    let draw = new MapboxDraw({
+        displayControlsDefault: false,
+        controls: {
+            polygon: true,
+            trash: true
+        }
+    });
+
+    let surveys = {};
+
+    let showModal = (title, message, reload = false) => {
+        let modal = $('#warningModal');
+        modal.find('.modal-body').text(title);
+        modal.find('.modal-body').html(message);
+        if (reload)
+            modal.find('.btn').click(() => location.reload(true));
+        modal.modal();
+    };
+
+    $(() => {
+        $('#saveBtn').prop('disabled', true);
+    });
+
+    map.on('load', () => {
+        $.ajax({
+            type: "POST",
+            url: '/getUserAssets',
+            success: (response) => {
+                if (!response.success) {
+                    showModal("Error", "Failed to retrieve surveys");
+                    return;
+                }
+                let layerBase = {
+                    source: {
+                        type: "geojson",
+                        data: {
+                            type: "FeatureCollection",
+                            features: []
+                        }
+                    },
+                    layout: {},
+                };
+                let line_paint = {
+                    'line-color': 'rgba(0, 0, 0, 1)',
+                    'line-width': 2
+                };
+                let polygon_fill = {
+                    'fill-color': 'rgba(100, 100, 240, 0.2)'
+                };
+                response.data.forEach((x,i) => {
+                    let geojson = x.boundaries;
+                    let id = geojson.id? geojson.id : i;
+                    surveys[id] = x;
+                    geojson.properties.landType = x.landType;
+                    geojson.properties.surveyNumber = x.surveyNumber;
+                    geojson.properties.type = x.type;
+                    geojson.properties.output_index = x.output_index;
+                    layerBase.source.data.features.push(geojson);
+                });
+                map.addLayer($.extend(false, layerBase, {
+                    type: "fill", id: "survey", paint: polygon_fill
+                }));
+                map.addLayer($.extend(false, layerBase, {
+                    type: "line", id: "surveyBorder", paint: line_paint
+                }));
+                map.on('mouseenter', 'survey', function () {
+                    map.getCanvas().style.cursor = 'pointer';
+                });
+                map.on('mouseleave', 'survey', function () {
+                    map.getCanvas().style.cursor = '';
+                });
+                map.on('click', 'survey', function (e) {
+                    e.preventDefault();
+                    let feature = map.queryRenderedFeatures(e.point, {layers: ['survey']})[0];
+                    new mapboxgl.Popup()
+                        .setLngLat(e.lngLat)
+                        .setHTML(`Survey Number : ${feature.properties.surveyNumber} <br/>` +
+                            `Land Type : ${feature.properties.landType} <br/>`)
+                        .addTo(map);
+                });
+
+                map.addControl(draw);
+            },
+            contentType: "application/json",
+            dataType: "json"
+        })
+    });
+
+    map.on('draw.create', (e) => {
+        let json = JSON.stringify(e.features[0]);
+        $("#boundaries").val(json)
+    });
+
+    /*map.on('draw.delete', (e) => {
+        e.features.forEach(feature => {
+            if (Object.keys(surveys).includes(feature.id)) {
+                showModal("Warning", "Can not delete existing survey");
+                draw.add(feature);
+            }
+        })
+    });*/
+
+    map.on('draw.update', (e) => {
+        if (e.features.length === 0)
+            return;
+        let json = JSON.stringify(e.features[0]);
+        $("#boundaries").val(json);
+        $('#saveBtn').prop('disabled', true);
+    });
+
+    map.on('draw.selectionchange', (e) => {
+        $('#boundaries').val(e.features.length === 0 ? '' : JSON.stringify(e.features[0]));
+        $('#saveBtn').prop('disabled', true);
+    });
+
+    $('#toPubKey').on('input propertychange paste', () => {
+        $('#saveBtn').prop('disabled', true);
+        $('#user_details').text("Click Prepare to find the user with specified public key");
+    });
+
+    $("#prepareBtn").click((e) => {
+        e.preventDefault();
+        let form = $('#inputForm')[0];
+        form.classList.add('was-validated');
+        if (form.checkValidity() === false) {
+            return
+        }
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json",
+            url: '/getUserDetails',
+            data: JSON.stringify({
+                public_key: $('#toPubKey').val()
+            }),
+            success: (response) => {
+                if (!response.success) {
+                    showModal("Error", response.message);
+                } else {
+                    $('#user_details').text(`User : ${response.data.name}`);
+                    $('#saveBtn').prop('disabled', false);
+                }
+            }
+        })
+    });
+
+    $("#saveBtn").click((e) => {
+        e.preventDefault();
+        let threshold = 0;
+        let input = JSON.parse($('#boundaries').val());
+        let surveyNumber = $('#surveyNumber').val().trim();
+        let survey = Object.values(surveys).find(x => x.surveyNumber === surveyNumber);
+        if (!survey) {
+            showModal("Error", "Invalid Survey Number");
+            return;
+        }
+        let remaining = turf.difference(survey.boundaries, input);
+        let oldArea = survey.area;
+        let intersection = remaining ? turf.intersect(survey.boundaries, input) : survey.boundaries;
+        if (!intersection || turf.area(intersection) < threshold) {
+            showModal("Error", "Area selected is too low");
+            return;
+        }
+        intersection.id = input.id;
+        draw.add(intersection);
+        let remainingArea = remaining ? Math.round(turf.area(remaining) * 10) : 0;
+        let newArea = oldArea - remainingArea;
+        $.ajax({
+            type: "POST",
+            url: '/transferLand',
+            data: JSON.stringify({
+                surveyNumber: $('#surveyNumber').val(),
+                transaction_id: survey.transaction_id,
+                output_index: survey.output_index,
+                public_key: $('#toPubKey').val().trim(),
+                divisions: {
+                    from_data: {
+                        boundaries: JSON.stringify(remaining),
+                        area: remainingArea
+                    },
+                    to_data: {
+                        boundaries: JSON.stringify(intersection),
+                        area: newArea
+                    }
+                }
+            }),
+            success: (response) => {
+                console.log(response);
+                if (response.success) {
+                    showModal("Success", "Land Transfer Request made", true);
+                } else
+                    showModal("Failure", response.message);
+            },
+            error: () => {
+                showModal("Failure", "Critical error");
+            },
+            contentType: "application/json",
+            dataType: "json"
+        });
+    });
+
+</script>
+</body>
+</html>
