@@ -66,6 +66,14 @@ def serve_view():
         abort(401)
 
 
+@app.route('/transact')
+def serve_transact():
+    if user.get_user_type() == "USER":
+        return send_from_directory('templates/', 'user/transact.html')
+    else:
+        abort(401)
+
+
 @app.route('/saveSurvey', methods=['POST'])
 def save_survey():
     if user.get_user_type() != "SURVEYOR":
