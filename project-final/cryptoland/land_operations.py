@@ -1,10 +1,12 @@
 import json
+from collections import defaultdict
 
 from bigchaindb_driver.crypto import CryptoKeypair
 
 from cryptoland.database_helper import DatabaseHelper
 from cryptoland.transaction_helper import TransactionHelper
 from .user_config import GOVERNMENT_PUBKEY, UserConfig
+import sys
 
 
 class Survey:
@@ -26,7 +28,8 @@ class Survey:
             "boundaries": self.boundaries,
             "landType": self.landType,
             "id": self.id,
-            "type": self.type
+            "type": self.type,
+            "area": self.area
         }
         return json.dumps(dictionary)
 
@@ -37,7 +40,8 @@ class Survey:
                 "boundaries": json.dumps(self.boundaries),
                 "landType": self.landType,
                 "id": self.id,
-                "type": self.type
+                "type": self.type,
+                "area": self.area
             }
         }
         current_user = self.user.user
@@ -70,28 +74,42 @@ class LandTransactions:
         self.transactionHelper = TransactionHelper("http://bigchaindb:9984")
 
     def get_user_assets(self):
-        data = self.transactionHelper.find_asset("SURVEY")
+        public_key = self.user.get_system_user()['pub.key']
+        utxos = self.transactionHelper.get_unspent_outputs(public_key)
+        data = defaultdict(list)
+        for utxo in utxos:
+            data[utxo['transaction_id']].append(utxo['output_index'])
+        transactions = self.databaseHelper.get_land_transactions(list(data.keys()))
         results = []
-        for asset in data:
-            transaction_id = asset['id']
-            asset = asset['data']
-            asset['boundaries'] = json.loads(asset['boundaries'])
-            asset['transaction_id'] = transaction_id
-            results.append(asset)
+        for transaction in transactions:
+            output_indices = data[transaction['txid']]
+            for output_index in output_indices:
+                result = {**transaction['asset'],
+                          'type': 'partial' if len(transaction['outputs'][output_index]) > 1 else 'full'}
+                if 'metadata' in transaction:
+                    metadata = transaction['metadata']
+                    metadata = [metadata['from_data'], metadata['to_data']]
+                    for datum in metadata:
+                        if datum['public_key'] == public_key:
+                            result['boundaries'] = json.loads(datum['boundaries'])
+                            result['area'] = datum['area']
+                else:
+                    result['boundaries'] = json.loads(result['boundaries'])
+                result['transaction_id'] = transaction['txid']
+                result['output_index'] = output_index
+                results.append(result)
         return results
 
-    def transfer_land(self, survey_number, divisions, transaction_id):
+    def transfer_land(self, survey_number, transaction_id, output_index, to_public_key, divisions):
         user_type = self.user.get_user_type()
         user = self.user.user
-        from_data = divisions['from_data']
-        to_data = divisions['to_data']
-        to_pubkey = self.databaseHelper.get_user_details(to_data['public_key'])
+        to_details = self.databaseHelper.get_user_details(to_public_key)
         if not user_type:
             return {"success": False, "message": "User not initialized"}
-        if not to_pubkey:
+        if not to_details:
             return {"success": False, "message": "Destination key doesn't correspond to a valid USER"}
         if user_type == "SURVEYOR":
-            return {"success": False, "message": "SURVEYOR doesn't have the privilege to transfer land"}
+            return {"success": False, "message": "SURVEYOR don't have the privilege to transfer land"}
         survey = self.databaseHelper.get_survey(survey_number)
         if not survey:
             return {"success": False, "message": "Could not fetch survey"}
@@ -101,14 +119,19 @@ class LandTransactions:
                 asset_id = last_transaction['id']
             else:
                 asset_id = last_transaction['asset']['id']
-            output_index = from_data['output_index']
+            divisions['from_data']['public_key'] = user['pub.key']
+            divisions['to_data']['public_key'] = to_public_key
             metadata = {
                 'asset_id': asset_id,
-                'boundaries': [json.dumps(x) for x in [from_data['boundaries'], to_data['boundaries']]]
+                'divisions': divisions
             }
+            from_area = divisions['from_data']['area']
+            to_area = divisions['to_data']['area']
             if user_type == "GOVERNMENT":
-                recipients = [([GOVERNMENT_PUBKEY], from_data['area']),
-                              ([GOVERNMENT_PUBKEY, to_data['public_key']], to_data['area'])]
+                recipients = []
+                if from_area > 0:
+                    recipients.append(([GOVERNMENT_PUBKEY], from_area))
+                recipients.append(([GOVERNMENT_PUBKEY, to_public_key], to_area))
                 self.transactionHelper.transfer_asset(
                     last_transaction,
                     asset_id,
@@ -120,8 +143,10 @@ class LandTransactions:
                 )
                 return {"success": True, "data": {"status": "done"}}
             else:
-                recipients = [([GOVERNMENT_PUBKEY, user['pub.key']], from_data['area']),
-                              ([GOVERNMENT_PUBKEY, to_data['public_key']], to_data['area'])]
+                recipients = []
+                if from_area > 0:
+                    recipients.append(([GOVERNMENT_PUBKEY, user['pub.key']], from_area))
+                recipients.append(([GOVERNMENT_PUBKEY, to_public_key], to_area))
                 self.transactionHelper.transfer_asset_partial_approval(
                     last_transaction,
                     asset_id,
@@ -134,5 +159,4 @@ class LandTransactions:
                 )
                 return {"success": True, "data": {"status": "waiting"}}
         except Exception as e:
-            raise e
-            # return {"success": False, "message": "Exception: " + str(e)}
+            return {"success": False, "message": "Exception: " + repr(e)}

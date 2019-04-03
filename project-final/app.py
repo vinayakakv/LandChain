@@ -129,10 +129,13 @@ def transfer_land():
     survey_number = req['surveyNumber']
     divisions = req['divisions']
     transaction_id = req['transaction_id']
-    return jsonify(land_transactions.transfer_land(survey_number, divisions, transaction_id))
+    to_public_key = req['public_key']
+    output_index = req['output_index']
+    return jsonify(
+        land_transactions.transfer_land(survey_number, transaction_id, output_index, to_public_key, divisions))
 
 
-@app.route('/getUserAssets', methods=['POST'])
+@app.route('/getUserAssets', methods=['GET', 'POST'])
 def get_user_assets():
     return jsonify({"success": True, "data": land_transactions.get_user_assets()})
 

@@ -82,3 +82,77 @@ class DatabaseHelper:
     def get_survey(self, survey_number):
         db = self.client.bigchain
         return db.assets.find_one({"data.type": "SURVEY", "data.surveyNumber": survey_number}, {"_id": 0})
+
+    def get_land_transactions(self, transaction_ids: list):
+        try:
+            db = self.client.bigchain
+            pipeline = [
+                {
+                    '$match': {
+                        'id': {
+                            '$in': transaction_ids
+                        }
+                    }
+                }, {
+                    '$lookup': {
+                        'from': 'metadata',
+                        'localField': 'id',
+                        'foreignField': 'id',
+                        'as': 'metadata'
+                    }
+                }, {
+                    '$lookup': {
+                        'from': 'assets',
+                        'localField': 'asset.id',
+                        'foreignField': 'id',
+                        'as': 'asset'
+                    }
+                }, {
+                    '$lookup': {
+                        'from': 'assets',
+                        'localField': 'id',
+                        'foreignField': 'id',
+                        'as': 'asset_create'
+                    }
+                }, {
+                    '$unwind': {
+                        'path': '$asset',
+                        'preserveNullAndEmptyArrays': True
+                    }
+                }, {
+                    '$unwind': {
+                        'path': '$asset_create',
+                        'preserveNullAndEmptyArrays': True
+                    }
+                }, {
+                    '$unwind': {
+                        'path': '$metadata',
+                        'preserveNullAndEmptyArrays': True
+                    }
+                }, {
+                    '$project': {
+                        'asset': [
+                            '$asset_create.data', '$asset.data'
+                        ],
+                        'metadata': '$metadata.metadata.divisions',
+                        'txid': '$id',
+                        'outputs': '$outputs.public_keys'
+                    }
+                }, {
+                    '$unwind': {
+                        'path': '$asset',
+                        'preserveNullAndEmptyArrays': False
+                    }
+                }, {
+                    '$match': {
+                        'asset': {
+                            '$ne': None
+                        },
+                        'asset.type': 'SURVEY'
+                    }
+                }
+            ]
+            result = list(db.transactions.aggregate(pipeline))
+            return result
+        except:
+            return []

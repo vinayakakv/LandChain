@@ -41,7 +41,7 @@
                 <a class="nav-link" href="view">View Users <span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
-                <a class="nav-link active" href="distribute.html">Distribute Land<span class="sr-only">(current)</span></a>
+                <a class="nav-link active" href="distribute">Distribute Land<span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="about">About</a>
@@ -205,11 +205,14 @@
                     'fill-color': 'rgba(100, 100, 240, 0.2)'
                 };
                 response.data.forEach((x) => {
+                    if (x.type === 'partial')
+                        return;
                     let geojson = x.boundaries;
                     surveys[geojson.id] = x;
                     geojson.properties.landType = x.landType;
                     geojson.properties.surveyNumber = x.surveyNumber;
                     geojson.properties.type = x.type;
+                    geojson.properties.output_index = x.output_index;
                     layerBase.source.data.features.push(geojson);
                 });
                 map.addLayer($.extend(false, layerBase, {
@@ -309,32 +312,32 @@
             showModal("Error", "Invalid Survey Number");
             return;
         }
-        let intersection = turf.intersect(survey.boundaries, input);
+        let remaining = turf.difference(survey.boundaries, input);
+        let oldArea = survey.area;
+        let intersection = remaining ? turf.intersect(survey.boundaries, input) : survey.boundaries;
         if (!intersection || turf.area(intersection) < threshold) {
             showModal("Error", "Area selected is too low");
             return;
         }
         intersection.id = input.id;
         draw.add(intersection);
-        let remaining = turf.difference(survey.boundaries, input);
-        let newArea = Math.round(turf.area(intersection) * 10);
-        let oldArea = Math.round(turf.area(survey.boundaries) * 10);
-        let remainingArea = oldArea - newArea;
+        let remainingArea = remaining ? Math.round(turf.area(remaining) * 10) : 0;
+        let newArea = oldArea - remainingArea;
         $.ajax({
             type: "POST",
             url: '/transferLand',
             data: JSON.stringify({
                 surveyNumber: $('#surveyNumber').val(),
                 transaction_id: survey.transaction_id,
+                output_index: survey.output_index,
+                public_key: $('#toPubKey').val().trim(),
                 divisions: {
                     from_data: {
-                        output_index: 0,
-                        boundaries: remaining,
+                        boundaries: JSON.stringify(remaining),
                         area: remainingArea
                     },
                     to_data: {
-                        public_key: $('#toPubKey').val().trim(),
-                        boundaries: intersection,
+                        boundaries: JSON.stringify(intersection),
                         area: newArea
                     }
                 }
