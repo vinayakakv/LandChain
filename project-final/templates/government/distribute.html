@@ -204,11 +204,12 @@
                 let polygon_fill = {
                     'fill-color': 'rgba(100, 100, 240, 0.2)'
                 };
-                response.data.forEach((x) => {
+                response.data.forEach((x,i) => {
                     if (x.type === 'partial')
                         return;
                     let geojson = x.boundaries;
-                    surveys[geojson.id] = x;
+                    let id = geojson.id? geojson.id : i;
+                    surveys[id] = x;
                     geojson.properties.landType = x.landType;
                     geojson.properties.surveyNumber = x.surveyNumber;
                     geojson.properties.type = x.type;
