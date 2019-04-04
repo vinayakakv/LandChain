@@ -6,7 +6,6 @@ from bigchaindb_driver.crypto import CryptoKeypair
 from cryptoland.database_helper import DatabaseHelper
 from cryptoland.transaction_helper import TransactionHelper
 from .user_config import GOVERNMENT_PUBKEY, UserConfig
-import sys
 
 
 class Survey:
@@ -57,8 +56,8 @@ class Survey:
 
     @staticmethod
     def get_surveys():
-        transactionHelper = TransactionHelper("http://bigchaindb:9984")
-        data = transactionHelper.find_asset("SURVEY")
+        databaseHelper = DatabaseHelper("mongodb://bigchaindb:27017")
+        data = databaseHelper.retrieve_assets("SURVEY")
         results = []
         for asset in data:
             asset = asset['data']

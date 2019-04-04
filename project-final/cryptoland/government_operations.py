@@ -11,10 +11,10 @@ class GovernmentOperations:
     def get_user_requests(self):
         if self.config.get_user_type() != "GOVERNMENT":
             return {"success": False, "message": "Only Government user retrieve user requests"}
-        assets = self.config.transactionHelper.find_asset("CREATE_USER")
+        assets = self.config.databaseHelper.retrieve_assets("CREATE_USER")
         result = []
         for asset in assets:
-            similar = self.config.transactionHelper.find_asset(asset['data']['key'])
+            similar = self.config.databaseHelper.find_asset("data.key", asset['data']['key'])
             if len(similar) == 1:
                 result.append(asset)
         return {"success": True, "data": result}
@@ -26,7 +26,7 @@ class GovernmentOperations:
         if public_key in registered_users:
             return {"success": False, "message": "User already registered"}
         government = CryptoKeypair(public_key=self.config.user['pub.key'], private_key=self.config.user['priv.key'])
-        user_requests = self.config.transactionHelper.find_asset(public_key)
+        user_requests = self.config.databaseHelper.find_asset("data.key", public_key)
         if user_requests and user_requests[-1]['data']['type'] != "CREATE_USER":
             return {"success": False, "message": "Invalid user creation request"}
         try:

@@ -134,9 +134,6 @@ class TransactionHelper:
         driver.common.transaction.Transaction.validate_id(prepared_transfer_tx)
         return self.driver.transactions.send_commit(prepared_transfer_tx)
 
-    def find_asset(self, key):
-        return self.driver.assets.get(search=key)
-
     def find_transactions(self, asset_id):
         return self.driver.transactions.get(asset_id=asset_id)
 

@@ -216,3 +216,11 @@ class DatabaseHelper:
     def get_user_asset(self, public_key):
         db = self.client.bigchain
         return db.assets.find_one({"data.type": "REGISTER_USER", "data.key": public_key})
+
+    def retrieve_assets(self, asset_type):
+        db = self.client.bigchain
+        return list(db.assets.find({"data.type": asset_type}, {"_id": 0}))
+
+    def find_asset(self, key, value):
+        db = self.client.bigchain
+        return list(db.assets.find({key: value}, {"_id": 0}))

@@ -74,7 +74,7 @@ class UserConfig:
         user_type = self.user.get('user_type', None)
         if user_type is not None:
             return user_type
-        user_assets = self.transactionHelper.find_asset(self.user['pub.key'])
+        user_assets = self.databaseHelper.find_asset("data.key", self.user['pub.key'])
         to_burn = False
         burn_id = None
         for user_asset in user_assets:
@@ -100,4 +100,4 @@ class UserConfig:
         return user_type
 
     def get_registered_users(self):
-        return {"success": True, "data": self.transactionHelper.find_asset("REGISTER_USER")}
+        return {"success": True, "data": self.databaseHelper.retrieve_assets("REGISTER_USER")}
