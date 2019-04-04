@@ -212,3 +212,7 @@ class DatabaseHelper:
             return subpart_number + 1
         except Exception as e:
             raise e
+
+    def get_user_asset(self, public_key):
+        db = self.client.bigchain
+        return db.assets.find_one({"data.type": "REGISTER_USER", "data.key": public_key})

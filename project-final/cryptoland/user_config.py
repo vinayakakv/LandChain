@@ -3,6 +3,7 @@ import pathlib
 
 from bigchaindb_driver.exceptions import MissingPrivateKeyError
 
+from cryptoland.database_helper import DatabaseHelper
 from cryptoland.transaction_helper import TransactionHelper
 
 GOVERNMENT_PUBKEY = pathlib.Path("app/cryptoland/government.key").read_text().rstrip()
@@ -12,6 +13,7 @@ BURN_PUBKEY = "BurnBurnBurnBurnBurnBurnBurnBurnBurnBurnBurn"
 class UserConfig:
     def __init__(self):
         self.transactionHelper = TransactionHelper("http://bigchaindb:9984")
+        self.databaseHelper = DatabaseHelper("mongodb://bigchaindb:27017")
         self.keydir = pathlib.Path("/keys")
         self.user = {}
         for file in self.keydir.glob('*key'):
@@ -60,9 +62,9 @@ class UserConfig:
         return {k: self.user[k] for k in self.user if k != "priv.key"}
 
     def get_user_name(self):
-        user_assets = self.transactionHelper.find_asset(self.user['pub.key'])
-        if user_assets:
-            return user_assets[0]['data']['name']
+        user_asset = self.databaseHelper.get_user_asset(self.user['pub.key'])
+        if user_asset:
+            return user_asset['data']['name']
         else:
             return None
 
