@@ -66,6 +66,14 @@ def serve_view():
         abort(401)
 
 
+@app.route('/resolve')
+def serve_resolve():
+    if user.get_user_type() == "GOVERNMENT":
+        return send_from_directory('templates/', 'government/resolve.html')
+    else:
+        abort(401)
+
+
 @app.route('/transact')
 def serve_transact():
     if user.get_user_type() == "USER":
@@ -107,6 +115,14 @@ def register_user():
     return jsonify(government.register_user(public_key, user_type))
 
 
+@app.route('/resolveRequest', methods=['POST'])
+def resolve_request():
+    req = json.loads(request.data)
+    asset_id = req['asset_id'].strip()
+    reject = req['reject']
+    return jsonify(government.resolve_request(asset_id, reject))
+
+
 @app.route('/getRegisteredUsers', methods=['POST', 'GET'])
 def get_registered_users():
     return jsonify(user.get_registered_users())
@@ -115,6 +131,11 @@ def get_registered_users():
 @app.route('/getUserRequests', methods=['POST', 'GET'])
 def get_user_requests():
     return jsonify(government.get_user_requests())
+
+
+@app.route('/getTransferRequests', methods=['POST', 'GET'])
+def get_transfer_requests():
+    return jsonify(government.get_transfer_requests())
 
 
 @app.route('/getUserDetails', methods=['POST'])

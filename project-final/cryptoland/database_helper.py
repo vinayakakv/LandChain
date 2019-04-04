@@ -209,6 +209,7 @@ class DatabaseHelper:
             ]
             result = list(db.transactions.aggregate(pipeline))
             subpart_number = result[0]['subpart_number'] if result else 0
+            subpart_number = subpart_number if subpart_number else 0
             return subpart_number + 1
         except Exception as e:
             raise e
@@ -224,3 +225,30 @@ class DatabaseHelper:
     def find_asset(self, key, value):
         db = self.client.bigchain
         return list(db.assets.find({key: value}, {"_id": 0}))
+
+    def get_transfer_requests(self):
+        try:
+            db = self.client.bigchain
+            pipeline = [
+                {
+                    '$match': {
+                        'data.type': 'TRANSFER_REQUEST'
+                    }
+                }, {
+                    '$lookup': {
+                        'from': 'assets',
+                        'localField': 'data.asset',
+                        'foreignField': 'id',
+                        'as': 'asset'
+                    }
+                }, {
+                    '$unwind': {
+                        'path': '$asset',
+                        'preserveNullAndEmptyArrays': False
+                    }
+                }
+            ]
+            results = list(db.assets.aggregate(pipeline))
+            return results
+        except Exception:
+            return []

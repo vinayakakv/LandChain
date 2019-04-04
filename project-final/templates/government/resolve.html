@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous">
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css' rel='stylesheet'/>
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.js'></script>
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.css'
+          type='text/css'/>
+    <style>
+    </style>
+    <title>Resolve</title>
+</head>
+
+
+<body>
+<nav class="navbar sticky-top navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">CryptoLand | Government</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse " id="navbarSupportedContent">
+        <ul class="navbar-nav  mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="home">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="register">Register Users <span
+                        class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="view">View Users <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="distribute">Distribute Land<span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="resolve">Resolve<span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="about">About</a>
+            </li>
+        </ul>
+        <div class="form-inline my-2 my-lg-0">
+            <button class="btn btn-outline-danger my-2 my-sm-0" onclick="window.location.href='/'">Logout</button>
+        </div>
+    </div>
+</nav>
+<div class="container-fluid">
+    <!-- Modal -->
+    <div class="modal fade" id="warningModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Warning</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <span>Message goes here</span>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-9 col-sm-12">
+            <div id='map' style="top:5vh;height:80vh;"></div>
+        </div>
+        <div class="col-md-3 col-sm-12 mt-4 border-left border-dark">
+            <div class="container-fluid">
+                <form class="needs-validation" id="inputForm" autocomplete="off" novalidate>
+                    <div class="form-group">
+                        <label for="surveyNumber" class="col-form-label">Survey Number</label>
+                        <div class="col-sm-12">
+                            <input type="text" id="surveyNumber" class="form-control" placeholder="Survey Number"
+                                   required>
+                            <div class="invalid-feedback">
+                                Please enter a survey number.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="from" class="col-form-label">From Key</label>
+                        <div class="col-sm-12">
+                            <input type="text" id="from" class="form-control" placeholder="Public Key"
+                                   required>
+                            <div class="invalid-feedback">
+                                Please enter a public key.
+                            </div>
+                            <div id="from_details" class="valid-feedback">
+                                Click Fetch to find the user with specified public key
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="to" class="col-form-label">To Key</label>
+                        <div class="col-sm-12">
+                            <input type="text" id="to" class="form-control" placeholder="Public Key"
+                                   required>
+                            <div class="invalid-feedback">
+                                Please enter a public key.
+                            </div>
+                            <div id="to_details" class="valid-feedback">
+                                Click Fetch to find the user with specified public key
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="area" class="col-form-label">Area</label>
+                        <div class="col-sm-12">
+                            <input type="text" id="area" class="form-control" placeholder="Area"
+                                   required>
+                            <div class="invalid-feedback">
+                                Please enter area.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-sm-3 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-outline-primary" id="prepareBtn">Fetch
+                            </button>
+                        </div>
+                        <div class="col-sm-5 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-outline-danger" id="rejectBtn">Reject
+                            </button>
+                        </div>
+                        <div class="col-sm-4 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-outline-success" id="resolveBtn">Resolve</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script
+        src="http://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+<script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+<script>
+    'use strict';
+
+    $(".readonly").on('keydown paste', function (e) {
+        e.preventDefault();
+    });
+
+    mapboxgl.accessToken = 'pk.eyJ1Ijoic2FnYXJrcyIsImEiOiJjanI2bXQxa20wMmR0NDJtczd6ZzAxaG05In0.hKpKurChhDYW0eo4R48wjw';
+    /* eslint-disable */
+    let map = new mapboxgl.Map({
+        container: 'map', // container id
+        style: 'mapbox://styles/mapbox/satellite-v9', //hosted style id
+        center: [-91.874, 42.760], // starting position
+        zoom: 14 // starting zoom
+    });
+
+    let draw = new MapboxDraw({
+        displayControlsDefault: false,
+        controls: {
+            polygon: false,
+            trash: false
+        }
+    });
+
+    map.addControl(draw);
+    let surveys = {};
+
+    let showModal = (title, message, reload = false) => {
+        let modal = $('#warningModal');
+        modal.find('.modal-body').text(title);
+        modal.find('.modal-body').html(message);
+        if (reload)
+            modal.find('.btn').click(() => location.reload(true));
+        modal.modal();
+    };
+
+    map.on('load', () => {
+        $.ajax({
+            type: "POST",
+            url: '/getTransferRequests',
+            success: (response) => {
+                if (!response.success) {
+                    showModal("Error", "Failed to retrieve surveys");
+                    return;
+                }
+                response.data.forEach((x, i) => {
+                    if (!x.boundaries.id)
+                        x.boundaries['id'] = i;
+                    surveys[x.boundaries.id] = x;
+                    draw.add(x.boundaries);
+                })
+            },
+            contentType: "application/json",
+            dataType: "json"
+        })
+    });
+
+    map.on('draw.delete', (e) => {
+        e.features.forEach(feature => {
+            if (Object.keys(surveys).includes(feature.id)) {
+                showModal("Warning", "Can not delete existing data");
+                draw.add(feature);
+            }
+        })
+    });
+
+    map.on('draw.update', (e) => {
+        if (e.features.length === 0)
+            return;
+        if (Object.keys(surveys).includes(e.features[0].id)) {
+            showModal("Warning", "Could not move existing data");
+            draw.delete(e.features[0].id);
+            draw.add(surveys[e.features[0].id].boundaries)
+        }
+    });
+
+    map.on('draw.selectionchange', (e) => {
+        [$('#from_details'), $('#to_details')].forEach(x => x.hide());
+        $("#resolveBtn").prop('disabled', true);
+        $("#rejectBtn").prop('disabled', true);
+        let inputs = [$('#surveyNumber'), $('#from'), $('#to'), $('#area')];
+        if (e.features.length === 0) {
+            inputs.forEach(x => x.val(""));
+            return;
+        }
+        if (Object.keys(surveys).includes(e.features[0].id)) {
+            let current = surveys[e.features[0].id];
+            let values = [current.surveyNumber, current.from, current.to, current.area];
+            inputs.forEach((x, i) => {
+                x.prop('disabled', true);
+                x.val(values[i]);
+            });
+        } else {
+            inputs.forEach((x) => {
+                x.prop('disabled', false);
+                x.val("");
+            });
+        }
+    });
+
+    $("#prepareBtn").click((e) => {
+        e.preventDefault();
+        let form = $('#inputForm')[0];
+        form.classList.add('was-validated');
+        if (form.checkValidity() === false) {
+            return
+        }
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json",
+            url: '/getUserDetails',
+            data: JSON.stringify({
+                public_key: $('#from').val()
+            }),
+            success: (response) => {
+                if (!response.success) {
+                    showModal("Error", response.message);
+                } else {
+                    $('#from_details').text(`User : ${response.data.name}`).show();
+                    $.ajax({
+                        type: "POST",
+                        dataType: "json",
+                        contentType: "application/json",
+                        url: '/getUserDetails',
+                        data: JSON.stringify({
+                            public_key: $('#to').val()
+                        }),
+                        success: (response1) => {
+                            if (!response1.success) {
+                                showModal("Error", response1.message);
+                            } else {
+                                $('#to_details').text(`User : ${response1.data.name}`).show();
+                                $('#resolveBtn').prop('disabled', false);
+                                $('#rejectBtn').prop('disabled', false);
+                            }
+                        },
+                        error: () => {
+                            showModal("Error", "Critical Error");
+                        }
+                    });
+                }
+            },
+            error: () => {
+                showModal("Error", "Critical Error");
+            }
+        });
+    });
+
+    let resolveRequest = (reject = false) => {
+        let surveyNumber = $('#surveyNumber').val();
+        let survey = Object.values(surveys).find(x => x.surveyNumber === surveyNumber);
+        if (!survey) {
+            showModal("Error", "Invalid Survey Number");
+            return;
+        }
+        let asset_id = survey.asset_id;
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json",
+            url: '/resolveRequest',
+            data: JSON.stringify({
+                asset_id: asset_id,
+                reject: reject
+            }),
+            success: (response) => {
+                if (!response.success) {
+                    showModal("Error", response.message);
+                    return;
+                }
+                showModal("Success", "Request Settled", true)
+            },
+            error: () => {
+                showModal("Error", "Critical Error");
+            }
+        })
+    };
+
+    $("#resolveBtn").click((e) => {
+        e.preventDefault();
+        resolveRequest();
+    });
+
+    $('#rejectBtn').click((e) => {
+        e.preventDefault();
+        resolveRequest(true);
+    })
+
+</script>
+</body>
+
+</html>

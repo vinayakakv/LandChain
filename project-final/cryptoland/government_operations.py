@@ -1,6 +1,8 @@
+import json
+
 from bigchaindb_driver.crypto import CryptoKeypair
 
-from .user_config import UserConfig
+from .user_config import UserConfig, BURN_PUBKEY
 from bigchaindb_driver.exceptions import MissingPrivateKeyError
 
 
@@ -18,6 +20,26 @@ class GovernmentOperations:
             if len(similar) == 1:
                 result.append(asset)
         return {"success": True, "data": result}
+
+    def get_transfer_requests(self):
+        if self.config.get_user_type() != "GOVERNMENT":
+            return {"success": False, "message": "Only Government user retrieve user requests"}
+        requests = self.config.databaseHelper.get_transfer_requests()
+        results = []
+        for request in requests:
+            similar = self.config.transactionHelper.driver.transactions.get(asset_id=request['id'])
+            if len(similar) == 1:
+                result = {
+                    **request['asset']['data'],
+                    'asset_id': request['id'],
+                    'boundaries': json.loads(request['data']['metadata']['divisions']['to_data']['boundaries']),
+                    'from': request['data']['from'],
+                    'to': request['data']['to']
+                }
+                subpart_number = request['data']['metadata']['divisions']['to_data'].get('subpart_number', 0)
+                result['surveyNumber'] += '/' + str(subpart_number) if subpart_number > 0 else ""
+                results.append(result)
+        return {"success": True, "data": results}
 
     def register_user(self, public_key, user_type):
         if self.config.get_user_type() != "GOVERNMENT":
@@ -41,3 +63,34 @@ class GovernmentOperations:
             return {"success": True, "data": result}
         except MissingPrivateKeyError:
             return {"success": False, "message": "Benami Government User!"}
+
+    def resolve_request(self, asset_id, reject):
+        if self.config.get_user_type() != "GOVERNMENT":
+            return {"success": False, "message": "Only Government user retrieve user requests"}
+        asset = self.config.databaseHelper.find_asset("id", asset_id)
+        if len(asset) == 0:
+            return {"success": False, "message": "Invalid asset id"}
+        asset = asset[0]
+        transactions = self.config.transactionHelper.driver.transactions.get(asset_id=asset_id)
+        if len(transactions) != 1:
+            return {"success": False, "message": "Request was already resolved"}
+        government = CryptoKeypair(
+            private_key=self.config.user['priv.key'],
+            public_key=self.config.user['pub.key']
+        )
+        try:
+            commit = None
+            if not reject:
+                commit = self.config.transactionHelper.complete_partial_transfer(
+                    asset,
+                    government
+                )
+            burn = self.config.transactionHelper.transfer_asset(
+                transactions[-1],
+                asset_id,
+                government,
+                BURN_PUBKEY
+            )
+            return {"success": True, "data": {"commit": commit, "burn": burn}}
+        except Exception as e:
+            raise e

@@ -105,7 +105,11 @@ class TransactionHelper:
             'data': {
                 'type': 'TRANSFER_REQUEST',
                 'message': rapidjson.dumps(prepared_tx),
-                'fulfillment': rapidjson.dumps(payload)
+                'fulfillment': rapidjson.dumps(payload),
+                'asset': asset_id,
+                'metadata': metadata,
+                'from': owner1.public_key,
+                'to': to[-1][0][1]  # Last 1 for looking nice, could be -1
             }
         }
         return self.create_asset(owner1, asset, (owner2_pubkey,))
