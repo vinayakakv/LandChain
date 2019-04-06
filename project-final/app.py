@@ -82,6 +82,11 @@ def serve_transact():
         abort(401)
 
 
+@app.route('/history')
+def serve_history():
+    return send_from_directory('templates/', 'history.html')
+
+
 @app.route('/saveSurvey', methods=['POST'])
 def save_survey():
     if user.get_user_type() != "SURVEYOR":
@@ -172,6 +177,11 @@ def get_user_assets():
 @app.route('/')
 def login_page():
     return render_template('index.html')
+
+
+@app.errorhandler(404)
+def page_not_found(error):
+    return render_template('page_not_found.html'), 404
 
 
 if __name__ == '__main__':
