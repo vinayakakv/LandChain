@@ -33,6 +33,7 @@ class Survey:
         return json.dumps(dictionary)
 
     def save(self):
+        current_user = self.user.user
         asset = {
             'data': {
                 "surveyNumber": self.surveyNumber,
@@ -43,7 +44,22 @@ class Survey:
                 "area": self.area
             }
         }
-        current_user = self.user.user
+        metadata = {
+            'divisions': {
+                'from_data': {
+                    'boundaries': None,
+                    'area': 0,
+                    'public_key': current_user['pub.key'],
+                    'subpart_number': 0
+                },
+                'to_data': {
+                    'boundaries': json.dumps(self.boundaries),
+                    'area': self.area,
+                    'public_key': GOVERNMENT_PUBKEY,
+                    'subpart_number': 0
+                }
+            }
+        }
         keypair = CryptoKeypair(public_key=current_user['pub.key'],
                                 private_key=current_user['priv.key'])
         print(asset, keypair)
@@ -51,7 +67,8 @@ class Survey:
             creator=keypair,
             owner_pubkey=GOVERNMENT_PUBKEY,
             asset=asset,
-            quantity=self.area
+            quantity=self.area,
+            metadata=metadata
         )
 
     @staticmethod
@@ -131,9 +148,9 @@ class LandTransactions:
                 'divisions': divisions
             }
             from_area = divisions['from_data']['area']
-            if from_area > 0:
-                metadata['divisions']['from_data']['subpart_number'] = int(subpart_number)
-                metadata['divisions']['to_data']['subpart_number'] = self.databaseHelper.get_subpart_number(asset_id)
+            metadata['divisions']['from_data']['subpart_number'] = int(subpart_number)
+            metadata['divisions']['to_data']['subpart_number'] = self.databaseHelper.get_subpart_number(
+                asset_id) if from_area > 0 else int(subpart_number)
             to_area = divisions['to_data']['area']
             if user_type == "GOVERNMENT":
                 recipients = []

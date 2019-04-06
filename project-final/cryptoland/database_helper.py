@@ -163,45 +163,95 @@ class DatabaseHelper:
             pipeline = [
                 {
                     '$match': {
-                        'id': asset_id
+                        'metadata.asset_id': asset_id
                     }
                 }, {
-                    '$lookup': {
-                        'from': 'transactions',
-                        'localField': 'id',
-                        'foreignField': 'asset.id',
-                        'as': 'transactions'
-                    }
-                }, {
-                    '$lookup': {
-                        'from': 'metadata',
-                        'localField': 'transactions.id',
-                        'foreignField': 'id',
-                        'as': 'metadata'
-                    }
-                }, {
-                    '$project': {
-                        'from_subpart': '$metadata.metadata.divisions.from_data.subpart_number',
-                        'to_subpart': '$metadata.metadata.divisions.to_data.subpart_number'
-                    }
-                }, {
-                    '$project': {
+                    '$group': {
+                        '_id': 'stats',
                         'subpart_number': {
-                            '$max': [
-                                {
-                                    '$max': '$from_subpart'
-                                }, {
-                                    '$max': '$to_subpart'
-                                }
-                            ]
+                            '$max': {
+                                '$max': [
+                                    '$metadata.divisions.from_data.subpart_number',
+                                    '$metadata.divisions.to_data.subpart_number'
+                                ]
+                            }
                         }
                     }
                 }
             ]
-            result = list(db.transactions.aggregate(pipeline))
+            result = list(db.metadata.aggregate(pipeline))
             subpart_number = result[0]['subpart_number'] if result else 0
             subpart_number = subpart_number if subpart_number else 0
             return subpart_number + 1
+        except Exception as e:
+            raise e
+
+    def get_asset_history(self, asset_id):
+        try:
+            db = self.client.bigchain
+            pipeline = [
+                {
+                    '$match': {
+                        '$or': [
+                            {
+                                'operation': 'CREATE',
+                                'id': asset_id
+                            }, {
+                                'operation': 'TRANSFER',
+                                'asset.id': asset_id
+                            }
+                        ]
+                    }
+                }, {
+                    '$lookup': {
+                        'from': 'metadata',
+                        'localField': 'id',
+                        'foreignField': 'id',
+                        'as': 'metadata'
+                    }
+                }, {
+                    '$unwind': {
+                        'path': '$metadata',
+                        'preserveNullAndEmptyArrays': False
+                    }
+                }, {
+                    '$replaceRoot': {
+                        'newRoot': '$metadata'
+                    }
+                }
+            ]
+            nodes = []
+            edges = []
+            for i, tx in enumerate(db.transactions.aggregate(pipeline)):
+                (from_data, to_data) = [tx['metadata']['divisions']['from_data'],
+                                        tx['metadata']['divisions']['to_data']]
+                parent_node = None
+                for node in nodes[::-1]:
+                    if node['subpart_number'] == from_data['subpart_number'] and node['public_key'] == from_data[
+                        'public_key']:
+                        parent_node = node
+                        break
+                parent_id = parent_node['id'] if parent_node else None
+                if from_data['area'] > 0:
+                    left_node = {
+                        "id": "{}:{}".format(i, 1),
+                        "boundaries": from_data['boundaries'],
+                        "area": from_data['area'],
+                        "public_key": from_data['public_key'],
+                        "subpart_number": from_data['subpart_number']
+                    }
+                    nodes.append(left_node)
+                    edges.append({'from': parent_id, 'to': left_node['id']})
+                right_node = {
+                    "id": "{}:{}".format(i, 2),
+                    "boundaries": to_data['boundaries'],
+                    "area": to_data['area'],
+                    "public_key": to_data['public_key'],
+                    "subpart_number": to_data['subpart_number']
+                }
+                nodes.append(right_node)
+                edges.append({'from': parent_id, 'to': right_node['id']})
+            return {"success": True, "data": {"nodes": nodes, "edges": edges}}
         except Exception as e:
             raise e
 

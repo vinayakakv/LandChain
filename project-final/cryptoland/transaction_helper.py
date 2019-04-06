@@ -12,14 +12,15 @@ class TransactionHelper:
     def __init__(self, ip):
         self.driver = BigchainDB(ip)
 
-    def create_asset(self, owner, asset, recipients=None):
+    def create_asset(self, owner, asset, recipients=None, metadata=None):
         if recipients is None:
             recipients = (owner.public_key,)
         prepared_tx = self.driver.transactions.prepare(
             operation='CREATE',
             signers=owner.public_key,
             asset=asset,
-            recipients=recipients
+            recipients=recipients,
+            metadata=metadata
         )
         fulfilled_tx = self.driver.transactions.fulfill(
             prepared_tx,
@@ -27,12 +28,13 @@ class TransactionHelper:
         )
         return self.driver.transactions.send_commit(fulfilled_tx)
 
-    def create_divisible_asset(self, creator, owner_pubkey, asset, quantity):
+    def create_divisible_asset(self, creator, owner_pubkey, asset, quantity, metadata=None):
         prepared_tx = self.driver.transactions.prepare(
             operation='CREATE',
             signers=creator.public_key,
             recipients=[([owner_pubkey], quantity)],
-            asset=asset
+            asset=asset,
+            metadata=metadata
         )
         fulfilled_tx = self.driver.transactions.fulfill(
             prepared_tx, private_keys=creator.private_key
@@ -112,7 +114,7 @@ class TransactionHelper:
                 'to': to[-1][0][1]  # Last 1 for looking nice, could be -1
             }
         }
-        return self.create_asset(owner1, asset, (owner2_pubkey,))
+        return self.create_asset(owner1, asset, (owner2_pubkey,), metadata)
 
     def complete_partial_transfer(self, transfer_asset, owner2):
         payload = rapidjson.loads(transfer_asset['data']['fulfillment'])
