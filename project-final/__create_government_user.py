@@ -7,10 +7,11 @@ parser = argparse.ArgumentParser(description='Create Government User')
 parser.add_argument("-s", '--bigchaindb-ip',
                     dest="ip",
                     help="BigchainDB REST API Server IP",
-                    default='http://localhost:9984')
+                    default='http://bigchaindb:9984')
 parser.add_argument("-k", '--key-dir',
                     dest="key_dir",
-                    help="Location to store the keys")
+                    help="Location to store the keys",
+                    default="/keys")
 args = parser.parse_args()
 tr = TransactionHelper(args.ip)
 keydir = pathlib.Path(args.key_dir)

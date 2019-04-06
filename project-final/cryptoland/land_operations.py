@@ -112,7 +112,10 @@ class LandTransactions:
             return {"success": False, "message": "Destination key doesn't correspond to a valid USER"}
         if user_type == "SURVEYOR":
             return {"success": False, "message": "SURVEYOR don't have the privilege to transfer land"}
-        survey = self.databaseHelper.get_survey(survey_number.split('/')[0])
+        split = survey_number.split('/')
+        subpart_number = split[1] if len(split) > 1 else 0
+        survey_number = split[0]
+        survey = self.databaseHelper.get_survey(survey_number)
         if not survey:
             return {"success": False, "message": "Could not fetch survey"}
         try:
@@ -129,7 +132,7 @@ class LandTransactions:
             }
             from_area = divisions['from_data']['area']
             if from_area > 0:
-                metadata['divisions']['from_data']['subpart_number'] = 0
+                metadata['divisions']['from_data']['subpart_number'] = int(subpart_number)
                 metadata['divisions']['to_data']['subpart_number'] = self.databaseHelper.get_subpart_number(asset_id)
             to_area = divisions['to_data']['area']
             if user_type == "GOVERNMENT":
