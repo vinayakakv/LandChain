@@ -173,11 +173,6 @@ class DatabaseHelper:
                         'as': 'transactions'
                     }
                 }, {
-                    '$unwind': {
-                        'path': '$transactions',
-                        'preserveNullAndEmptyArrays': False
-                    }
-                }, {
                     '$lookup': {
                         'from': 'metadata',
                         'localField': 'transactions.id',
@@ -185,24 +180,20 @@ class DatabaseHelper:
                         'as': 'metadata'
                     }
                 }, {
-                    '$unwind': {
-                        'path': '$metadata',
-                        'preserveNullAndEmptyArrays': False
-                    }
-                }, {
                     '$project': {
                         'from_subpart': '$metadata.metadata.divisions.from_data.subpart_number',
                         'to_subpart': '$metadata.metadata.divisions.to_data.subpart_number'
                     }
                 }, {
-                    '$group': {
-                        '_id': 'result',
+                    '$project': {
                         'subpart_number': {
-                            '$max': {
-                                '$max': [
-                                    '$from_subpart', '$to_subpart'
-                                ]
-                            }
+                            '$max': [
+                                {
+                                    '$max': '$from_subpart'
+                                }, {
+                                    '$max': '$to_subpart'
+                                }
+                            ]
                         }
                     }
                 }
