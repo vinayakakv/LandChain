@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous">
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css' rel='stylesheet'/>
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.js'></script>
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.css'
+          type='text/css'/>
+    <style>
+    </style>
+    <title>Hisory</title>
+</head>
+
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark justify-content-between">
+    <a class="navbar-brand" href="#">CryptoLand | History</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <form class="form-inline  needs-validation" id="input-form" autocomplete="off">
+        <label class="sr-only" for="surveyNumber">Username</label>
+        <div class="input-group mb-2 mr-sm-2">
+            <div class="input-group-prepend">
+                <div class="input-group-text">#</div>
+            </div>
+            <input type="text" class="form-control" id="surveyNumber" placeholder="Survey Number" required>
+            <div class="invalid-feedback">
+                sari ilyo
+            </div>
+        </div>
+    </form>
+</nav>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+
+<div class="container-fluid">
+    <!-- Modal -->
+    <div class="modal fade" id="warningModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Warning</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <span>Message goes here</span>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-7 col-sm-12">
+            <div id='map' style="top:5vh;height:80vh;"></div>
+        </div>
+        <div id="tree" class="col-md-5 col-sm-12 mt-4 border-left border-dark">
+
+        </div>
+    </div>
+</div>
+<script
+        src="http://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.5.2/cytoscape.min.js'></script>
+<script>
+    'use strict';
+
+    mapboxgl.accessToken = 'pk.eyJ1Ijoic2FnYXJrcyIsImEiOiJjanI2bXQxa20wMmR0NDJtczd6ZzAxaG05In0.hKpKurChhDYW0eo4R48wjw';
+    /* eslint-disable */
+    let map = new mapboxgl.Map({
+        container: 'map', // container id
+        style: 'mapbox://styles/mapbox/satellite-v9', //hosted style id
+        center: [-91.874, 42.760], // starting position
+        zoom: 14 // starting zoom
+    });
+
+    let draw = new MapboxDraw({
+        displayControlsDefault: false,
+        controls: {
+            polygon: false,
+            trash: false
+        }
+    });
+
+    map.addControl(draw);
+    let surveys = {};
+
+    let showModal = (title, message) => {
+        let modal = $('#warningModal');
+        modal.find('.modal-body').text(title);
+        modal.find('.modal-body').html(message);
+        modal.modal();
+    };
+
+    map.on('load', () => {
+        let forest = [];
+        $.ajax({
+            type: "POST",
+            url: '/getTransactionHistory',
+            success: (response) => {
+                if (!response.success) {
+                    showModal("Error", "Failed to retrieve surveys");
+                    return;
+                }
+                response.data.forEach((x) => {
+                    let tree = {
+                        nodes: [],
+                        edges: [],
+                        surveyNumber: 0
+                    };
+                    tree.surveyNumber = x.data.surveyNumber;
+                    [
+                        'landType',
+                        'surveyNumber'
+                    ].forEach(key => x.data.boundaries.properties[key] = x.data[key]);
+                    tree.nodes.push(x.boundaries); // The root node
+                    
+                })
+            },
+            contentType: "application/json",
+            dataType: "json"
+        })
+    });
+
+    map.on('draw.create', (e) => {
+        let json = JSON.stringify(e.features[0]);
+        $("#boundaries").val(json)
+    });
+
+    map.on('draw.delete', (e) => {
+        e.features.forEach(feature => {
+            if (Object.keys(surveys).includes(feature.id)) {
+                showModal("Warning", "Can not delete existing survey");
+                draw.add(feature);
+            }
+        })
+    });
+
+    map.on('draw.update', (e) => {
+        if (e.features.length === 0)
+            return;
+        if (Object.keys(surveys).includes(e.features[0].id)) {
+            showModal("Warning", "Could not move existing survey");
+            draw.delete(e.features[0].id);
+            draw.add(surveys[e.features[0].id].boundaries)
+        } else {
+            console.log(e);
+            let json = JSON.stringify(e.features[0]);
+            $("#boundaries").val(json);
+        }
+    });
+
+    map.on('draw.selectionchange', (e) => {
+        if (e.features.length === 0)
+            return;
+        let inputs = [$('#surveyNumber'), $('#landType'), $('#boundaries')];
+        let saveBtn = $("#saveBtn");
+        if (Object.keys(surveys).includes(e.features[0].id)) {
+            let current = surveys[e.features[0].id];
+            let values = [current.surveyNumber, current.landType, JSON.stringify(current.boundaries)];
+            inputs.forEach((x, i) => {
+                x.prop('disabled', true);
+                x.val(values[i]);
+            });
+            saveBtn.prop('disabled', true);
+        } else {
+            inputs.forEach((x) => {
+                x.prop('disabled', false);
+                if (x.attr("id") !== "boundaries")
+                    x.val("");
+                else
+                    x.val(JSON.stringify(e.features[0]))
+            });
+            saveBtn.prop('disabled', false);
+        }
+    });
+
+    $("#saveBtn").click((e) => {
+        e.preventDefault();
+        let form = $('#inputForm')[0];
+        form.classList.add('was-validated');
+        if (form.checkValidity() === false) {
+            return;
+        }
+        if (Object.values(surveys).map(x => x.surveyNumber).indexOf($('#surveyNumber').val()) != -1) {
+            showModal("Error", "Survey Number is not unique");
+            return;
+        }
+        let threshold = 0;
+        let input = $('#boundaries');
+        let newSurvey = JSON.parse(input.val());
+        let id = newSurvey.id;
+        let intersections = [];
+        Object.values(surveys).forEach(survey => {
+            try {
+                let intersection = turf.intersect(survey.boundaries, newSurvey);
+                if (intersection)
+                    intersections.push(survey.boundaries);
+            } catch (e) {
+
+            }
+        });
+        let intersectionArea = intersections.map(turf.area).reduce((x, y) => x + y, 0);
+        if (intersectionArea >= threshold) {
+            intersections.forEach(intersection => {
+                newSurvey = turf.difference(newSurvey, intersection);
+            })
+        } else {
+            draw.delete(id);
+            showModal("Too much overlapping area, do the survey again");
+            return;
+        }
+        newSurvey.id = id;
+        //draw.delete(id);
+        draw.add(newSurvey);
+        let area = Math.round(turf.area(newSurvey) * 10);
+        let boundaries = JSON.stringify(newSurvey);
+        input.val(boundaries);
+        $.ajax({
+            type: "POST",
+            url: '/saveSurvey',
+            data: JSON.stringify({
+                surveyNumber: $('#surveyNumber').val(),
+                landType: $('#landType').val(),
+                boundaries: boundaries,
+                area: area
+            }),
+            success: (response) => {
+                console.log(response);
+                if (response.success) {
+                    let x = response.data;
+                    surveys[x.boundaries.id] = x;
+                    showModal("Success", "Survey successfully added");
+                } else
+                    showModal("Failure", response.message);
+            },
+            error: () => {
+                showModal("Failure", "Critical error");
+            },
+            contentType: "application/json",
+            dataType: "json"
+        });
+    });
+
+</script>
+</body>
+
+</html>
