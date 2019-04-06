@@ -11,14 +11,6 @@ services:
    - "$HOME/bigchaindb_docker/mongodb/data/db:/data/db"
    - "$HOME/bigchaindb_docker/mongodb/data/configdb:/data/configdb"
    - "$HOME/bigchaindb_docker/tendermint:/tendermint"
- cryptimage:
-  user: root
-  image: cryptoland/cryptimage
-  ports:
-   - "8080:8080"
-  volumes:
-   - "../project-final:/home/cryptoman/app"
-   - "$HOME/.config/cryptoland/keys:/keys"
  cryptimage-govt:
   user: root
   image: cryptoland/cryptimage
@@ -26,8 +18,16 @@ services:
    - "8000:8080"
   volumes:
    - "../project-final:/home/cryptoman/app"
-   - "$HOME/.config/cryptoland/keys1:/keys"
+   - "$HOME/.config/cryptoland/keys:/keys"
  cryptimage-surveyor:
+  user: root
+  image: cryptoland/cryptimage
+  ports:
+   - "8080:8080"
+  volumes:
+   - "../project-final:/home/cryptoman/app"
+   - "$HOME/.config/cryptoland/keys1:/keys"
+ cryptimage-user1:
   user: root
   image: cryptoland/cryptimage
   ports:
@@ -35,3 +35,11 @@ services:
   volumes:
    - "../project-final:/home/cryptoman/app"
    - "$HOME/.config/cryptoland/keys2:/keys"
+ cryptimage-user2:
+  user: root
+  image: cryptoland/cryptimage
+  ports:
+   - "8090:8080"
+  volumes:
+   - "../project-final:/home/cryptoman/app"
+   - "$HOME/.config/cryptoland/keys3:/keys"
