@@ -104,7 +104,7 @@ def get_surveys():
 def get_asset_history():
     req = json.loads(request.data)
     asset_id = req['asset_id'].strip()
-    return jsonify(database_helper.get_asset_history(asset_id)
+    return jsonify(database_helper.get_asset_history(asset_id))
 
 
 @app.route('/getSystemUser', methods=['POST', 'GET'])
