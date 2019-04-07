@@ -186,9 +186,13 @@ class DatabaseHelper:
         except Exception as e:
             raise e
 
-    def get_asset_history(self, asset_id):
+    def get_asset_history(self, survey_number):
         try:
             db = self.client.bigchain
+            asset = db.assets.find_one({"data.survey_number": survey_number})
+            if not asset:
+                raise Exception
+            asset_id = asset['id']
             pipeline = [
                 {
                     '$match': {
@@ -222,6 +226,7 @@ class DatabaseHelper:
             ]
             nodes = []
             edges = []
+            mapping = self.get_user_mapping()
             for i, tx in enumerate(db.transactions.aggregate(pipeline)):
                 (from_data, to_data) = [tx['metadata']['divisions']['from_data'],
                                         tx['metadata']['divisions']['to_data']]
@@ -238,6 +243,7 @@ class DatabaseHelper:
                         "boundaries": from_data['boundaries'],
                         "area": from_data['area'],
                         "public_key": from_data['public_key'],
+                        "user_name": mapping[from_data['public_key']],
                         "subpart_number": from_data['subpart_number']
                     }
                     nodes.append(left_node)
@@ -247,6 +253,7 @@ class DatabaseHelper:
                     "boundaries": to_data['boundaries'],
                     "area": to_data['area'],
                     "public_key": to_data['public_key'],
+                    "user_name": mapping[to_data['public_key']],
                     "subpart_number": to_data['subpart_number']
                 }
                 nodes.append(right_node)
@@ -296,3 +303,34 @@ class DatabaseHelper:
             return results
         except Exception:
             return []
+
+    def get_user_mapping(self):
+        try:
+            db = self.client.bigchain
+            pipeline = [
+                {
+                    '$match': {
+                        'data.type': 'REGISTER_USER'
+                    }
+                }, {
+                    '$group': {
+                        '_id': 'user_data',
+                        'mapping': {
+                            '$push': {
+                                'name': '$data.name',
+                                'key': '$data.key'
+                            }
+                        }
+                    }
+                }
+            ]
+            result = list(db.assets.aggregate(pipeline))
+            if len(result) == 0:
+                raise Exception()
+            result = result[0]
+            mapping = {}
+            for pair in result['mapping']:
+                mapping[pair['key']] = pair['name']
+            return mapping
+        except:
+            return {}

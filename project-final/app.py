@@ -100,11 +100,11 @@ def get_surveys():
     return jsonify({"success": True, "data": Survey.get_surveys()})
 
 
-@app.route('/getAssetHistory', methods=['POST', 'GET'])
+@app.route('/getAssetHistory', methods=['POST'])
 def get_asset_history():
     req = json.loads(request.data)
-    asset_id = req['asset_id'].strip()
-    return jsonify(database_helper.get_asset_history(asset_id))
+    survey_number = req['survey_number'].strip()
+    return jsonify(database_helper.get_asset_history(survey_number))
 
 
 @app.route('/getSystemUser', methods=['POST', 'GET'])
