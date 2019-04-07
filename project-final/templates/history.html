@@ -17,7 +17,7 @@
           type='text/css'/>
     <style>
     </style>
-    <title>Hisory</title>
+    <title>History</title>
 </head>
 
 <body>
@@ -28,16 +28,13 @@
         <span class="navbar-toggler-icon"></span>
     </button>
 
-    <form class="form-inline  needs-validation" id="input-form" autocomplete="off">
-        <label class="sr-only" for="surveyNumber">Username</label>
+    <form class="form-inline needs-validation" id="inputForm" autocomplete="off">
+        <label class="sr-only" for="surveyNumber">Survey Number</label>
         <div class="input-group mb-2 mr-sm-2">
             <div class="input-group-prepend">
                 <div class="input-group-text">#</div>
             </div>
             <input type="text" class="form-control" id="surveyNumber" placeholder="Survey Number" required>
-            <div class="invalid-feedback">
-                sari ilyo
-            </div>
         </div>
     </form>
 </nav>
@@ -70,7 +67,7 @@
             <div id='map' style="top:5vh;height:80vh;"></div>
         </div>
         <div id="tree" class="col-md-5 col-sm-12 mt-4 border-left border-dark">
-
+            <h1 class="display-4">Enter Survey Number to get started</h1>
         </div>
     </div>
 </div>
@@ -84,7 +81,7 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.5.2/cytoscape.min.js'></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.js"></script>
 <script>
     'use strict';
 
@@ -101,13 +98,11 @@
         displayControlsDefault: false,
         controls: {
             polygon: false,
-            trash: false
+            trash: true
         }
     });
-
     map.addControl(draw);
     let surveys = {};
-
     let showModal = (title, message) => {
         let modal = $('#warningModal');
         modal.find('.modal-body').text(title);
@@ -115,155 +110,93 @@
         modal.modal();
     };
 
-    map.on('load', () => {
-        let forest = [];
+
+    $('#inputForm').submit((e) => {
+        e.preventDefault();
+        let form = $('#inputForm')[0];
+        form.classList.add('was-validated');
+        if (form.checkValidity() === false) {
+            return
+        }
+        draw.deleteAll();
         $.ajax({
             type: "POST",
-            url: '/getTransactionHistory',
+            url: '/getAssetHistory',
+            data: JSON.stringify({
+                'survey_number': $('#surveyNumber').val()
+            }),
             success: (response) => {
                 if (!response.success) {
                     showModal("Error", "Failed to retrieve surveys");
                     return;
                 }
-                response.data.forEach((x) => {
-                    let tree = {
-                        nodes: [],
-                        edges: [],
-                        surveyNumber: 0
-                    };
-                    tree.surveyNumber = x.data.surveyNumber;
-                    [
-                        'landType',
-                        'surveyNumber'
-                    ].forEach(key => x.data.boundaries.properties[key] = x.data[key]);
-                    tree.nodes.push(x.boundaries); // The root node
-                    
-                })
+                let options = {
+                    layout: {
+                        hierarchical: {
+                            direction: 'RL',
+                            sortMethod: 'directed'
+                        }
+                    },
+                    nodes: {
+                        shape: 'box',
+                        color: {
+                            border: "#5E5E60",
+                            background: "#ADADAF",
+                            highlight: {
+                                border: "#170D3D",
+                                background: "#ADADAF",
+                            },
+                            hover: {
+                                border: "5E5E60",
+                                background: "#BDBDBF"
+                            }
+                        }
+                    },
+                    interaction: {
+                        hover: true,
+                        dragNodes: false
+                    }
+                };
+                let nodes = new vis.DataSet({});
+                let edges = new vis.DataSet({});
+                nodes.add(response.data.nodes);
+                edges.add(response.data.edges);
+                let data = {
+                    nodes: nodes,
+                    edges: edges
+                };
+                let container = document.querySelector('#tree');
+                let network = new vis.Network(container, data, options);
+                network.on('click', (e) => {
+                    let node_id = e.nodes[0];
+                    if (!node_id)
+                        return;
+                    let survey = nodes.get(node_id);
+                    survey.boundaries.properties.label = survey.label;
+                    survey.boundaries.id = node_id;
+                    draw.add(survey.boundaries);
+                });
+                map.on('draw.selectionchange', (e) => {
+                    if (e.features.length === 0)
+                        return;
+                    let id = e.features[0].id;
+                    network.selectNodes([id]);
+                });
             },
             contentType: "application/json",
             dataType: "json"
-        })
+        });
     });
 
-    map.on('draw.create', (e) => {
-        let json = JSON.stringify(e.features[0]);
-        $("#boundaries").val(json)
-    });
-
-    map.on('draw.delete', (e) => {
-        e.features.forEach(feature => {
-            if (Object.keys(surveys).includes(feature.id)) {
-                showModal("Warning", "Can not delete existing survey");
-                draw.add(feature);
-            }
-        })
-    });
 
     map.on('draw.update', (e) => {
         if (e.features.length === 0)
             return;
-        if (Object.keys(surveys).includes(e.features[0].id)) {
-            showModal("Warning", "Could not move existing survey");
-            draw.delete(e.features[0].id);
-            draw.add(surveys[e.features[0].id].boundaries)
-        } else {
-            console.log(e);
-            let json = JSON.stringify(e.features[0]);
-            $("#boundaries").val(json);
-        }
+        showModal("Warning", "Could not move existing data");
+        draw.delete(e.features[0].id);
+        draw.add(surveys[e.features[0].id].boundaries)
     });
 
-    map.on('draw.selectionchange', (e) => {
-        if (e.features.length === 0)
-            return;
-        let inputs = [$('#surveyNumber'), $('#landType'), $('#boundaries')];
-        let saveBtn = $("#saveBtn");
-        if (Object.keys(surveys).includes(e.features[0].id)) {
-            let current = surveys[e.features[0].id];
-            let values = [current.surveyNumber, current.landType, JSON.stringify(current.boundaries)];
-            inputs.forEach((x, i) => {
-                x.prop('disabled', true);
-                x.val(values[i]);
-            });
-            saveBtn.prop('disabled', true);
-        } else {
-            inputs.forEach((x) => {
-                x.prop('disabled', false);
-                if (x.attr("id") !== "boundaries")
-                    x.val("");
-                else
-                    x.val(JSON.stringify(e.features[0]))
-            });
-            saveBtn.prop('disabled', false);
-        }
-    });
-
-    $("#saveBtn").click((e) => {
-        e.preventDefault();
-        let form = $('#inputForm')[0];
-        form.classList.add('was-validated');
-        if (form.checkValidity() === false) {
-            return;
-        }
-        if (Object.values(surveys).map(x => x.surveyNumber).indexOf($('#surveyNumber').val()) != -1) {
-            showModal("Error", "Survey Number is not unique");
-            return;
-        }
-        let threshold = 0;
-        let input = $('#boundaries');
-        let newSurvey = JSON.parse(input.val());
-        let id = newSurvey.id;
-        let intersections = [];
-        Object.values(surveys).forEach(survey => {
-            try {
-                let intersection = turf.intersect(survey.boundaries, newSurvey);
-                if (intersection)
-                    intersections.push(survey.boundaries);
-            } catch (e) {
-
-            }
-        });
-        let intersectionArea = intersections.map(turf.area).reduce((x, y) => x + y, 0);
-        if (intersectionArea >= threshold) {
-            intersections.forEach(intersection => {
-                newSurvey = turf.difference(newSurvey, intersection);
-            })
-        } else {
-            draw.delete(id);
-            showModal("Too much overlapping area, do the survey again");
-            return;
-        }
-        newSurvey.id = id;
-        //draw.delete(id);
-        draw.add(newSurvey);
-        let area = Math.round(turf.area(newSurvey) * 10);
-        let boundaries = JSON.stringify(newSurvey);
-        input.val(boundaries);
-        $.ajax({
-            type: "POST",
-            url: '/saveSurvey',
-            data: JSON.stringify({
-                surveyNumber: $('#surveyNumber').val(),
-                landType: $('#landType').val(),
-                boundaries: boundaries,
-                area: area
-            }),
-            success: (response) => {
-                console.log(response);
-                if (response.success) {
-                    let x = response.data;
-                    surveys[x.boundaries.id] = x;
-                    showModal("Success", "Survey successfully added");
-                } else
-                    showModal("Failure", response.message);
-            },
-            error: () => {
-                showModal("Failure", "Critical error");
-            },
-            contentType: "application/json",
-            dataType: "json"
-        });
-    });
 
 </script>
 </body>

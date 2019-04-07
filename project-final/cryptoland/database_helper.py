@@ -1,3 +1,5 @@
+import rapidjson
+
 from pymongo import MongoClient
 
 
@@ -189,9 +191,9 @@ class DatabaseHelper:
     def get_asset_history(self, survey_number):
         try:
             db = self.client.bigchain
-            asset = db.assets.find_one({"data.survey_number": survey_number})
+            asset = db.assets.find_one({"data.surveyNumber": survey_number})
             if not asset:
-                raise Exception
+                raise Exception("Survey number not found")
             asset_id = asset['id']
             pipeline = [
                 {
@@ -232,35 +234,54 @@ class DatabaseHelper:
                                         tx['metadata']['divisions']['to_data']]
                 parent_node = None
                 for node in nodes[::-1]:
-                    if node['subpart_number'] == from_data['subpart_number'] and node['public_key'] == from_data[
-                        'public_key']:
+                    if node['subpart_number'] == from_data['subpart_number'] and \
+                            node['public_key'] == from_data['public_key'] and \
+                            node['area'] >= from_data['area']:
                         parent_node = node
                         break
                 parent_id = parent_node['id'] if parent_node else None
                 if from_data['area'] > 0:
                     left_node = {
                         "id": "{}:{}".format(i, 1),
-                        "boundaries": from_data['boundaries'],
+                        "boundaries": rapidjson.loads(from_data['boundaries']),
                         "area": from_data['area'],
                         "public_key": from_data['public_key'],
                         "user_name": mapping[from_data['public_key']],
                         "subpart_number": from_data['subpart_number']
                     }
+                    subpart_number = left_node['subpart_number']
+                    subpart_number = "/" + str(subpart_number) if subpart_number != 0 else ""
+                    left_node['label'] = "Survey:{}{}\nOwner:{}\nArea:{}".format(
+                        survey_number,
+                        subpart_number,
+                        left_node['user_name'],
+                        left_node['area']
+                    )
                     nodes.append(left_node)
-                    edges.append({'from': parent_id, 'to': left_node['id']})
+                    if parent_id:
+                        edges.append({'from': parent_id, 'to': left_node['id']})
                 right_node = {
                     "id": "{}:{}".format(i, 2),
-                    "boundaries": to_data['boundaries'],
+                    "boundaries": rapidjson.loads(to_data['boundaries']),
                     "area": to_data['area'],
                     "public_key": to_data['public_key'],
                     "user_name": mapping[to_data['public_key']],
                     "subpart_number": to_data['subpart_number']
                 }
+                subpart_number = right_node['subpart_number']
+                subpart_number = "/" + str(subpart_number) if subpart_number != 0 else ""
+                right_node['label'] = "Survey:{}{}\nOwner:{}\nArea:{}".format(
+                    survey_number,
+                    subpart_number,
+                    right_node['user_name'],
+                    right_node['area']
+                )
                 nodes.append(right_node)
-                edges.append({'from': parent_id, 'to': right_node['id']})
+                if parent_id:
+                    edges.append({'from': parent_id, 'to': right_node['id']})
             return {"success": True, "data": {"nodes": nodes, "edges": edges}}
         except Exception as e:
-            raise e
+            return {"success": False, "message": repr(e)}
 
     def get_user_asset(self, public_key):
         db = self.client.bigchain
