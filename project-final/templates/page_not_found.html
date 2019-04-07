@@ -1,10 +1,24 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>404 | Page Not Found</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <title>Error - {{ code }}</title>
 </head>
 <body>
-    <h1>Am I blind?</h1>
+<div class="jumbotron ">
+    <h1 class="display-1"><small class="text-muted">Error </small> {{ code }}</h1>
+    <p class="lead">{{ message }}</p>
+    <hr class="my-4">
+    <p>Go back to login</p>
+    <p class="lead">
+        <a class="btn btn-outline-primary btn-lg" href="/" role="button">Login</a>
+    </p>
+</div>
 </body>
-</html>

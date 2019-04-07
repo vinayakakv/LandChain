@@ -187,8 +187,15 @@ def login_page():
 
 
 @app.errorhandler(404)
-def page_not_found(error):
-    return render_template('page_not_found.html'), 404
+@app.errorhandler(401)
+def serve_error(error):
+    if "401" in str(error):
+        code = 401
+        message = "You are not supposed to do this thing!"
+    else:
+        code = 404
+        message = "You don't have good Typing Skills!"
+    return render_template('page_not_found.html', code=code, message=message), code
 
 
 if __name__ == '__main__':
