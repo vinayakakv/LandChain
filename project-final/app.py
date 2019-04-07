@@ -1,4 +1,4 @@
-import json
+import rapidjson
 
 from flask import Flask, render_template, send_from_directory, request, jsonify, abort
 
@@ -92,7 +92,7 @@ def save_survey():
     if user.get_user_type() != "SURVEYOR":
         return jsonify({"success": False, "message": "Only Surveyor can survey"})
     s = Survey(request.data, user)
-    return jsonify({"success": True, "data": json.loads(str(s))})
+    return jsonify({"success": True, "data": rapidjson.loads(str(s))})
 
 
 @app.route('/getSurveys', methods=['POST', 'GET'])
@@ -102,7 +102,7 @@ def get_surveys():
 
 @app.route('/getAssetHistory', methods=['POST'])
 def get_asset_history():
-    req = json.loads(request.data)
+    req = rapidjson.loads(request.data)
     survey_number = req['survey_number'].strip()
     return jsonify(database_helper.get_asset_history(survey_number))
 
@@ -114,14 +114,14 @@ def get_system_user():
 
 @app.route('/addSystemUser', methods=['POST', 'GET'])
 def add_system_user():
-    req = json.loads(request.data)
+    req = rapidjson.loads(request.data)
     user_name = req['user_name']
     return jsonify(user.create_user(user_name))
 
 
 @app.route('/registerUser', methods=['POST'])
 def register_user():
-    req = json.loads(request.data)
+    req = rapidjson.loads(request.data)
     public_key = req['public_key'].strip()
     user_type = req['user_type'].strip().upper()
     return jsonify(government.register_user(public_key, user_type))
@@ -129,7 +129,7 @@ def register_user():
 
 @app.route('/resolveRequest', methods=['POST'])
 def resolve_request():
-    req = json.loads(request.data)
+    req = rapidjson.loads(request.data)
     asset_id = req['asset_id'].strip()
     reject = req['reject']
     return jsonify(government.resolve_request(asset_id, reject))
@@ -152,7 +152,7 @@ def get_transfer_requests():
 
 @app.route('/getUserDetails', methods=['POST'])
 def get_user_details():
-    req = json.loads(request.data)
+    req = rapidjson.loads(request.data)
     public_key = req['public_key']
     return jsonify(database_helper.get_user_details(public_key))
 
@@ -166,7 +166,7 @@ def get_surveyor_details():
 
 @app.route('/transferLand', methods=['POST'])
 def transfer_land():
-    req = json.loads(request.data)
+    req = rapidjson.loads(request.data)
     survey_number = req['surveyNumber']
     divisions = req['divisions']
     transaction_id = req['transaction_id']

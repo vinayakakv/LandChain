@@ -1,4 +1,4 @@
-import json
+import rapidjson
 
 from bigchaindb_driver.crypto import CryptoKeypair
 
@@ -32,7 +32,7 @@ class GovernmentOperations:
                 result = {
                     **request['asset']['data'],
                     'asset_id': request['id'],
-                    'boundaries': json.loads(request['data']['metadata']['divisions']['to_data']['boundaries']),
+                    'boundaries': rapidjson.loads(request['data']['metadata']['divisions']['to_data']['boundaries']),
                     'from': request['data']['from'],
                     'to': request['data']['to']
                 }
