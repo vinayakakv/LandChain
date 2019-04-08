@@ -1,7 +1,11 @@
-from cryptoland.transaction_helper import TransactionHelper
-from bigchaindb_driver.crypto import generate_keypair
 import argparse
 import pathlib
+import sys
+
+from bigchaindb_driver.crypto import generate_keypair
+
+from cryptoland.database_helper import DatabaseHelper
+from cryptoland.transaction_helper import TransactionHelper
 
 parser = argparse.ArgumentParser(description='Create Government User')
 parser.add_argument("-s", '--bigchaindb-ip',
@@ -14,6 +18,10 @@ parser.add_argument("-k", '--key-dir',
                     default="/keys")
 args = parser.parse_args()
 tr = TransactionHelper(args.ip)
+db = DatabaseHelper("mongodb://{}:27017".format("localhost" if "localhost" in args.ip else "bigchaindb"))
+if db.find_asset("data.user_type", "GOVERNMENT"):
+    print("GOVERNMENT already exists in the network ... Can not create new one", file=sys.stderr)
+    exit(-1)
 keydir = pathlib.Path(args.key_dir)
 government = generate_keypair()
 print("Creating Government User with Public Key : {},  Private Key : {}".format(government.public_key,
