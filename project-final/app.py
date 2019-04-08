@@ -26,7 +26,10 @@ def send_file(role, path):
 
 @app.route('/home')
 def serve_home():
-    return send_from_directory('templates/', user.get_user_type().lower() + '/home.html')
+    user_type = user.get_user_type()
+    if not user_type:
+        abort(401)
+    return send_from_directory('templates/', user_type.lower() + '/home.html')
 
 
 @app.route('/about')
