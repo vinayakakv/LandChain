@@ -72,7 +72,7 @@
                 <div class="col-4 col-xs">
                     <div class="card text-white bg-dark">
                         <div class="card-body text-center">
-                            <h1 class="card-title"> <span id="totalAcres"> 150 </span>
+                            <h1 class="card-title"><span id="totalAcres"> 150 </span>
                                 <small>Acres</small>
                             </h1>
                             <h4 class="card-subtitle mb-2 text-muted">Land Surveyed</h4>
@@ -117,6 +117,26 @@
         modal.modal();
     };
 
+    function nFormatter(num, digits) {
+        let si = [
+            {value: 1, symbol: ""},
+            {value: 1E3, symbol: "k"},
+            {value: 1E6, symbol: "M"},
+            {value: 1E9, symbol: "G"},
+            {value: 1E12, symbol: "T"},
+            {value: 1E15, symbol: "P"},
+            {value: 1E18, symbol: "E"}
+        ];
+        let rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
+        let i;
+        for (i = si.length - 1; i > 0; i--) {
+            if (num >= si[i].value) {
+                break;
+            }
+        }
+        return (num / si[i].value).toFixed(digits).replace(rx, "$1") + si[i].symbol;
+    }
+
     $(() => {
         $.ajax({
             type: 'POST',
@@ -134,10 +154,9 @@
                         dataType: 'json',
                         success: (response) => {
                             if (response.success) {
-                                $('#totalAcres').text(Math.round(response.data.totalAcre));
+                                $('#totalAcres').text(nFormatter(response.data.totalAcre, 2));
                                 $('#count').text(response.data.count);
-                            }
-                            else {
+                            } else {
                                 $('#totalAcres').text("0");
                                 $('#count').text("0");
                             }
