@@ -167,6 +167,25 @@ def get_surveyor_details():
     return jsonify(database_helper.get_surveyor_details(user.get_system_user()['pub.key']))
 
 
+@app.route('/getUserStats', methods=['POST', 'GET'])
+def get_user_stats():
+    if user.get_user_type() != "USER":
+        return {"success": False, "message": "User is not USER"}
+    user_assets = land_transactions.get_user_assets()
+    details = {
+        'distinctSurveys': 0,
+        'totalAcres': 0,
+        'totalParts': 0
+    }
+    surveys = set()
+    for asset in user_assets:
+        details['totalAcres'] += (asset['area'] / 40468.6)
+        surveys.add(asset['surveyNumber'].split('/')[0])
+        details['totalParts'] += 1
+    details['distinctSurveys'] = len(surveys)
+    return jsonify({"success": True, "data": details})
+
+
 @app.route('/transferLand', methods=['POST'])
 def transfer_land():
     req = rapidjson.loads(request.data)

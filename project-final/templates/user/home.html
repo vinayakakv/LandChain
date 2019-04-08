@@ -72,7 +72,7 @@
                 <div class="col-4 col-xs">
                     <div class="card text-white bg-dark">
                         <div class="card-body text-center">
-                            <h1 class="card-title"> <span id="totalAcres"> 150 </span>
+                            <h1 class="card-title"><span id="totalAcres"> 150 </span>
                                 <small>Acres</small>
                             </h1>
                             <h4 class="card-subtitle mb-2 text-muted">Land Owned</h4>
@@ -82,7 +82,7 @@
                 <div class="col-4 col-xs">
                     <div class="card text-white bg-dark">
                         <div class="card-body text-center">
-                            <h1 class="card-title" id="count">15</h1>
+                            <h1 class="card-title" id="distinctSurveys">15</h1>
                             <h4 class="card-subtitle mb-2 text-muted">Distinct Surveys</h4>
                         </div>
                     </div>
@@ -90,8 +90,8 @@
                 <div class="col-4 col-xs">
                     <div class="card text-white bg-dark">
                         <div class="card-body text-center">
-                            <h1 class="card-title" id="count">5</h1>
-                            <h4 class="card-subtitle mb-2 text-muted">Pending Requests</h4>
+                            <h1 class="card-title" id="totalParts">5</h1>
+                            <h4 class="card-subtitle mb-2 text-muted">Total Parts</h4>
                         </div>
                     </div>
                 </div>
@@ -125,6 +125,26 @@
         modal.modal();
     };
 
+    function nFormatter(num, digits) {
+        let si = [
+            {value: 1, symbol: ""},
+            {value: 1E3, symbol: "k"},
+            {value: 1E6, symbol: "M"},
+            {value: 1E9, symbol: "G"},
+            {value: 1E12, symbol: "T"},
+            {value: 1E15, symbol: "P"},
+            {value: 1E18, symbol: "E"}
+        ];
+        let rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
+        let i;
+        for (i = si.length - 1; i > 0; i--) {
+            if (num >= si[i].value) {
+                break;
+            }
+        }
+        return (num / si[i].value).toFixed(digits).replace(rx, "$1") + si[i].symbol;
+    }
+
     $(() => {
         $.ajax({
             type: 'POST',
@@ -136,21 +156,19 @@
                 else {
                     $('#user_name').text(response.data.name);
                     $('#public_key').text(response.data['pub.key'].substr(0, 7) + '...');
-                    /*$.ajax({
-                        url: '/getUserDetails',
+                    $.ajax({
+                        url: '/getUserStats',
                         type: 'POST',
                         dataType: 'json',
                         success: (response) => {
                             if (response.success) {
-                                $('#totalAcres').text(Math.round(response.data.totalAcre));
-                                $('#count').text(response.data.count);
-                            }
-                            else {
-                                $('#totalAcres').text("0");
-                                $('#count').text("0");
+                                let stats = response.data;
+                                Object.keys(stats).forEach(key => {
+                                    $('#' + key).text(nFormatter(stats[key],2));
+                                })
                             }
                         }
-                    })*/
+                    })
                 }
             }
         })
