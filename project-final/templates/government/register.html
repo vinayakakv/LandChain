@@ -12,8 +12,7 @@
           crossorigin="anonymous">
     <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.css'
           type='text/css'/>
-    <style>
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <title>Register</title>
 </head>
 
@@ -122,7 +121,7 @@
             url: '/getUserRequests',
             success: response => {
                 if (!response.success) {
-                    showModal("Error",response.message);
+                    showModal("Error", response.message);
                     return;
                 }
                 if (response.data.length === 0) {
@@ -155,6 +154,9 @@
             showModal("Error", `Must select a role for ${key.substr(0, 7) + '...'}`);
             return;
         }
+        let old = $(this).html();
+        $(this).prop('disabled', true);
+        $(this).html(`<i class="fa fa-lg fa-circle-o-notch fa-spin"></i>`);
         $.ajax({
             type: "POST",
             url: '/registerUser',
@@ -170,6 +172,10 @@
                     return;
                 }
                 showModal("Success", "User registered successfully", true);
+            },
+            complete: () => {
+                $(this).prop('disabled', false);
+                $(this).html(old);
             }
         })
     })

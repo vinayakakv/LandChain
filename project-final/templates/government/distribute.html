@@ -15,8 +15,7 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.js'></script>
     <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.css'
           type='text/css'/>
-    <style>
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <title>Distribute</title>
 </head>
 
@@ -204,11 +203,11 @@
                 let polygon_fill = {
                     'fill-color': 'rgba(100, 100, 240, 0.2)'
                 };
-                response.data.forEach((x,i) => {
+                response.data.forEach((x, i) => {
                     if (x.type === 'partial')
                         return;
                     let geojson = x.boundaries;
-                    let id = geojson.id? geojson.id : i;
+                    let id = geojson.id ? geojson.id : i;
                     surveys[id] = x;
                     geojson.properties.landType = x.landType;
                     geojson.properties.surveyNumber = x.surveyNumber;
@@ -277,13 +276,16 @@
         $('#user_details').text("Click Prepare to find the user with specified public key");
     });
 
-    $("#prepareBtn").click((e) => {
+    $("#prepareBtn").click(function (e) {
         e.preventDefault();
         let form = $('#inputForm')[0];
         form.classList.add('was-validated');
         if (form.checkValidity() === false) {
             return
         }
+        let old = $(this).html();
+        $(this).prop('disabled', true);
+        $(this).html(`<i class="fa fa-lg fa-circle-o-notch fa-spin"></i>`);
         $.ajax({
             type: "POST",
             dataType: "json",
@@ -299,11 +301,15 @@
                     $('#user_details').text(`User : ${response.data.name}`);
                     $('#saveBtn').prop('disabled', false);
                 }
+            },
+            complete: () => {
+                $(this).prop('disabled', false);
+                $(this).html(old);
             }
         })
     });
 
-    $("#saveBtn").click((e) => {
+    $("#saveBtn").click(function (e) {
         e.preventDefault();
         let threshold = 0;
         let input = JSON.parse($('#boundaries').val());
@@ -324,6 +330,9 @@
         draw.add(intersection);
         let remainingArea = remaining ? Math.round(turf.area(remaining) * 10) : 0;
         let newArea = oldArea - remainingArea;
+        let old = $(this).html();
+        $(this).prop('disabled', true);
+        $(this).html(`<i class="fa fa-lg fa-circle-o-notch fa-spin"></i>`);
         $.ajax({
             type: "POST",
             url: '/transferLand',
@@ -352,6 +361,10 @@
             },
             error: () => {
                 showModal("Failure", "Critical error");
+            },
+            complete: () => {
+                $(this).prop('disabled', false);
+                $(this).html(old);
             },
             contentType: "application/json",
             dataType: "json"

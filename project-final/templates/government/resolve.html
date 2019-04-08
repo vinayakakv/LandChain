@@ -15,8 +15,7 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.js'></script>
     <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.css'
           type='text/css'/>
-    <style>
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <title>Resolve</title>
 </head>
 
@@ -259,13 +258,16 @@
         }
     });
 
-    $("#prepareBtn").click((e) => {
+    $("#prepareBtn").click(function (e) {
         e.preventDefault();
         let form = $('#inputForm')[0];
         form.classList.add('was-validated');
         if (form.checkValidity() === false) {
             return
         }
+        let old = $(this).html();
+        $(this).prop('disabled', true);
+        $(this).html(`<i class="fa fa-lg fa-circle-o-notch fa-spin"></i>`);
         $.ajax({
             type: "POST",
             dataType: "json",
@@ -304,11 +306,15 @@
             },
             error: () => {
                 showModal("Error", "Critical Error");
+            },
+            complete: () => {
+                $(this).prop('disabled', false);
+                $(this).html(old);
             }
         });
     });
 
-    let resolveRequest = (reject = false) => {
+    let resolveRequest = (parent, reject = false) => {
         let surveyNumber = $('#surveyNumber').val();
         let survey = Object.values(surveys).find(x => x.surveyNumber === surveyNumber);
         if (!survey) {
@@ -316,6 +322,9 @@
             return;
         }
         let asset_id = survey.asset_id;
+        let old = parent.html();
+        parent.prop('disabled', true);
+        parent.html(`<i class="fa fa-lg fa-circle-o-notch fa-spin"></i>`);
         $.ajax({
             type: "POST",
             dataType: "json",
@@ -334,18 +343,22 @@
             },
             error: () => {
                 showModal("Error", "Critical Error");
+            },
+            complete: () => {
+                parent.prop('disabled', false);
+                parent.html(old);
             }
         })
     };
 
-    $("#resolveBtn").click((e) => {
+    $("#resolveBtn").click(function (e) {
         e.preventDefault();
-        resolveRequest();
+        resolveRequest($(this));
     });
 
-    $('#rejectBtn').click((e) => {
+    $('#rejectBtn').click(function (e) {
         e.preventDefault();
-        resolveRequest(true);
+        resolveRequest($(this), true);
     })
 
 </script>

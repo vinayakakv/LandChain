@@ -1,14 +1,12 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
           integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <title>Login</title>
 </head>
 <body>
@@ -124,8 +122,11 @@
         })
     });
     let signup_btn = $('#signup_btn');
-    signup_btn.click(() => {
+    signup_btn.click(function () {
         let errors = $('#errors');
+        let old = $(this).html();
+        $(this).prop('disabled', true);
+        $(this).html(`<i class="fa fa-lg fa-circle-o-notch fa-spin"></i>`);
         $.ajax({
             type: "POST",
             url: '/addSystemUser',
@@ -143,6 +144,13 @@
                 signup_btn.text("Login");
                 signup_btn.unbind('click');
                 signup_btn.click(() => location.reload());
+            },
+            error: () => {
+                errors.text("Critical Error");
+                $(this).html(old);
+            },
+            complete: () => {
+                $(this).prop('disabled', false);
             }
         })
     })

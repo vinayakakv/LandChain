@@ -15,8 +15,7 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.js'></script>
     <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.css'
           type='text/css'/>
-    <style>
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <title>Survey</title>
 </head>
 
@@ -237,14 +236,14 @@
         }
     });
 
-    $("#saveBtn").click((e) => {
+    $("#saveBtn").click(function (e) {
         e.preventDefault();
         let form = $('#inputForm')[0];
         form.classList.add('was-validated');
         if (form.checkValidity() === false) {
             return;
         }
-        if (Object.values(surveys).map(x=>x.surveyNumber).indexOf($('#surveyNumber').val()) != -1){
+        if (Object.values(surveys).map(x => x.surveyNumber).indexOf($('#surveyNumber').val()) != -1) {
             showModal("Error", "Survey Number is not unique");
             return;
         }
@@ -278,6 +277,9 @@
         let area = Math.round(turf.area(newSurvey) * 10);
         let boundaries = JSON.stringify(newSurvey);
         input.val(boundaries);
+        let old = $(this).html();
+        $(this).prop('disabled', true);
+        $(this).html(`<i class="fa fa-lg fa-circle-o-notch fa-spin"></i>`);
         $.ajax({
             type: "POST",
             url: '/saveSurvey',
@@ -298,6 +300,10 @@
             },
             error: () => {
                 showModal("Failure", "Critical error");
+            },
+            complete: () => {
+                $(this).prop('disabled', false);
+                $(this).html(old);
             },
             contentType: "application/json",
             dataType: "json"
