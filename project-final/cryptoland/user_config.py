@@ -1,6 +1,6 @@
-from bigchaindb_driver.crypto import generate_keypair, CryptoKeypair
 import pathlib
 
+from bigchaindb_driver.crypto import generate_keypair, CryptoKeypair
 from bigchaindb_driver.exceptions import MissingPrivateKeyError
 
 from cryptoland.database_helper import DatabaseHelper

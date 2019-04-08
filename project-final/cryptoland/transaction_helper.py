@@ -1,11 +1,10 @@
 import rapidjson
 
 import base58
+import bigchaindb_driver as driver
+from bigchaindb_driver import BigchainDB
 from cryptoconditions import ThresholdSha256, Ed25519Sha256
 from sha3 import sha3_256
-
-from bigchaindb_driver import BigchainDB
-import bigchaindb_driver as driver
 
 
 class TransactionHelper:

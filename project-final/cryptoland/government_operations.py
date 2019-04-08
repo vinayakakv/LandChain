@@ -1,9 +1,9 @@
 import rapidjson
 
 from bigchaindb_driver.crypto import CryptoKeypair
+from bigchaindb_driver.exceptions import MissingPrivateKeyError
 
 from .user_config import UserConfig, BURN_PUBKEY
-from bigchaindb_driver.exceptions import MissingPrivateKeyError
 
 
 class GovernmentOperations:

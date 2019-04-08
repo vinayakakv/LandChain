@@ -2,10 +2,10 @@ import rapidjson
 
 from flask import Flask, render_template, send_from_directory, request, jsonify, abort
 
+from cryptoland.database_helper import DatabaseHelper
 from cryptoland.government_operations import GovernmentOperations
 from cryptoland.land_operations import Survey, LandTransactions
 from cryptoland.user_config import UserConfig
-from cryptoland.database_helper import DatabaseHelper
 
 app = Flask(__name__, static_url_path='')
 user = UserConfig()
