@@ -19,6 +19,8 @@ services:
   volumes:
    - "../project-final:/home/cryptoman/app"
    - "$HOME/.config/cryptoland/keys:/keys"
+  env_file:
+   - .env
  cryptimage-surveyor:
   user: root
   image: cryptoland/cryptimage
@@ -27,6 +29,8 @@ services:
   volumes:
    - "../project-final:/home/cryptoman/app"
    - "$HOME/.config/cryptoland/keys1:/keys"
+  env_file:
+   - .env
  cryptimage-user1:
   user: root
   image: cryptoland/cryptimage
@@ -35,6 +39,8 @@ services:
   volumes:
    - "../project-final:/home/cryptoman/app"
    - "$HOME/.config/cryptoland/keys2:/keys"
+  env_file:
+   - .env
  cryptimage-user2:
   user: root
   image: cryptoland/cryptimage
@@ -43,3 +49,5 @@ services:
   volumes:
    - "../project-final:/home/cryptoman/app"
    - "$HOME/.config/cryptoland/keys3:/keys"
+  env_file:
+   - .env

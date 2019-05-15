@@ -1,3 +1,4 @@
+import os
 import pathlib
 
 from bigchaindb_driver.crypto import generate_keypair, CryptoKeypair
@@ -6,7 +7,7 @@ from bigchaindb_driver.exceptions import MissingPrivateKeyError
 from cryptoland.database_helper import DatabaseHelper
 from cryptoland.transaction_helper import TransactionHelper
 
-GOVERNMENT_PUBKEY = pathlib.Path("app/cryptoland/government.key").read_text().rstrip()
+GOVERNMENT_PUBKEY = os.environ['GOVERNMENT_PUBKEY']
 BURN_PUBKEY = "BurnBurnBurnBurnBurnBurnBurnBurnBurnBurnBurn"
 
 
